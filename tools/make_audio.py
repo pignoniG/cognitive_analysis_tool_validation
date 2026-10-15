@@ -175,19 +175,26 @@ def generate(kokoro, lang: str, name: str, out: Path) -> None:
 
 
 def candidates_page(root: Path) -> None:
-    """An HTML page to listen to every candidate voice side by side."""
+    """An HTML page to listen to every candidate voice side by side: one play button per clip and voice."""
     parts = []
     for lang, voices in VOICES.items():
         head = "".join(f"<th>{v}<br><small>{VOICES[lang][v]['description']}</small></th>" for v in voices)
         body = "".join(
-            f"<tr><td>{cid}<br><small>{text}</small></td>"
-            + "".join(f'<td><audio controls preload="none" src="{lang}/{v}/{cid}.wav"></audio></td>' for v in voices)
+            f"<tr><td>{text}</td>"
+            + "".join(f'<td><button data-src="{lang}/{v}/{cid}.wav" aria-label="Play {v}: {text}">▶</button></td>' for v in voices)
             + "</tr>" for cid, text in phrases(lang).items())
-        parts.append(f"<h2>{lang}</h2><table><tr><th>clip</th>{head}</tr>{body}</table>")
+        parts.append(f"<h2>{ {'it': 'Italiano', 'en': 'English'}[lang] }</h2><table><tr><th></th>{head}</tr>{body}</table>")
     (root / "index.html").write_text(
-        "<!doctype html><meta charset=utf-8><title>Voice candidates</title>"
-        "<style>body{font:14px system-ui;margin:16px}td,th{padding:4px 8px;border-bottom:1px solid #ccc;text-align:left}"
-        "small{color:#666}audio{height:32px}</style><h1>Voice candidates (Kokoro)</h1>" + "".join(parts))
+        "<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
+        "<title>Voice candidates</title><style>"
+        "body{font:14px/1.4 system-ui;margin:16px}table{border-collapse:collapse}"
+        "td,th{padding:4px 6px;border-bottom:1px solid #ccc;text-align:left;vertical-align:middle}"
+        "th small{color:#666;font-weight:normal}button{font-size:16px;width:40px;height:32px;cursor:pointer}"
+        "button.on{background:#C1441E;color:#fff}</style>"
+        "<h1>Voice candidates (Kokoro)</h1><p>Click ▶ to play a clip.</p>" + "".join(parts) +
+        "<script>let a=null,b=null;document.addEventListener('click',e=>{const t=e.target.closest('button[data-src]');"
+        "if(!t)return;if(a)a.pause();if(b)b.classList.remove('on');a=new Audio(t.dataset.src);b=t;t.classList.add('on');"
+        "a.onended=()=>t.classList.remove('on');a.play();});</script>")
 
 
 def main() -> int:
