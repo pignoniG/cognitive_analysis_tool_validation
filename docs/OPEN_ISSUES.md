@@ -30,3 +30,24 @@ Each issue says where it is, why it matters, what the presenter currently does a
   should use the presenter's weights so the two tools write identical files, unless the presenter changes first.
 - **Proposed:** one set in both tools; BT.709 is what cwtool fits against.
 - **Status:** kept.
+
+### 3. How accurate the logged audio onsets are
+- **Where:** `src/audio.js` (`getOutputTimestamp`), `nback_log.csv` `onset_unix_ms`.
+- **Problem:** the logged onset is when the browser expects the sound to leave the output, which includes the
+  browser's estimate of the output latency. Wired headphones on the built-in output are usually within a few
+  milliseconds; Bluetooth headphones add 100–300 ms that browsers often under-report. The pupil's response is slow
+  (hundreds of ms), but reaction times and event-locked averages would carry the error.
+- **Now:** wired headphones are assumed; `session.json` keeps the latencies the browser reported.
+- **Proposed:** measure once per set-up: record the headphone output and a frame marker together (a microphone
+  and a photodiode into one audio interface) and compare them with the logged onsets.
+- **Status:** needs data.
+
+### 4. Piper's synthesis is not repeatable
+- **Where:** `tools/make_audio.py`.
+- **Problem:** Piper adds random noise when it synthesises, so running the script again gives slightly different
+  clips (durations differ by tens of milliseconds). The committed clips are what the sessions use; regenerating them
+  changes the stimulus.
+- **Now:** the clips are generated once and committed with their manifest (voice, model, date, durations, levels).
+  Regenerate only on purpose, and record it.
+- **Proposed:** keep it so: the clips are data, not build output.
+- **Status:** kept.

@@ -15,6 +15,8 @@ const store = {
 };
 
 let plan = null, stim = null, display = null, state = "idle";   // idle | running | paused | done
+let audio = null;                                                 // what the stimulus window reports about its audio
+const scores = [];
 const SETUP_INPUTS = ["#participant", "#screen-h", "#distance", "#language"];
 
 function setup() {
@@ -54,7 +56,7 @@ function openInline() {
   const frame = Object.assign(document.createElement("iframe"), { src: "stimulus.html", title: "Stimulus (dry run)", allow: "fullscreen; screen-wake-lock" });
   $("#inline").replaceChildren(frame);
   stim = frame.contentWindow;
-  display = null;
+  display = null; audio = null; showAudio();
   setLive("#live-window", "dry run in this page: opening…");
 }
 
@@ -79,7 +81,7 @@ async function openStimulus() {
   }
   stim = window.open("stimulus.html", "validation-stimulus", features);
   if (!stim) { setLive("#live-window", "the browser blocked the window: allow pop-ups for this page", true); return; }
-  display = null;
+  display = null; audio = null; showAudio();
   setLive("#live-window", "opening…");
 }
 
@@ -96,10 +98,14 @@ window.addEventListener("message", (e) => {
   const m = e.data;
   if (m.type === "hello") sendSetup();
   else if (m.type === "display") { display = m.display; showDisplay(); updateButtons(); }
+  else if (m.type === "audio") { audio = m.audio; showAudio(); }
+  else if (m.type === "score") { scores.push(m.score); showScores(); }
   else if (m.type === "started") {
     state = "running";
     setLive("#live-saving", m.saving === "server" ? `to disk as it runs: sessions/${m.folder}/` : savingMemoryText());
     $("#files").replaceChildren();
+    scores.length = 0;
+    showScores();
     updateButtons();
   } else if (m.type === "status") showStatus(m);
   else if (m.type === "done") finished(m);
@@ -122,7 +128,27 @@ function showDisplay() {
   } else setLive("#live-window", `not full screen yet (${field}): move it to the participant's display and click it or press F`, true);
 }
 
-function showStatus({ status: s, fullscreen, saving }) {
+function showAudio() {
+  if (!audio) return setLive("#live-audio", "—");
+  const lang = { it: "Italian", en: "English" }[audio.language] ?? audio.language;
+  if (audio.error) setLive("#live-audio", audio.error, true);
+  else if (!audio.loaded) setLive("#live-audio", `loading the ${lang} clips…`);
+  else if (!audio.running) setLive("#live-audio", `${lang} (${audio.voice}) loaded; click the stimulus window or press a key in it to let it play sound`, true);
+  else setLive("#live-audio", `${lang} (${audio.voice}), ready`);
+}
+
+function showScores() {
+  if (!scores.length) { $("#scores").replaceChildren(); return; }
+  const rows = scores.map((s) => `<tr><td>${s.block}</td><td>${s.n}-back</td><td class="num">${s.hit}/${s.hit + s.miss}</td>` +
+    `<td class="num">${s.false_alarm}</td><td class="num">${s.dprime.toFixed(2)}</td><td class="num">${s.medianRt === null ? "—" : Math.round(s.medianRt)}</td>` +
+    `<td class="num">${s.interrupted || ""}</td></tr>`).join("");
+  $("#scores").innerHTML = "<table><thead><tr><th>Block</th><th>Level</th><th class=\"num\">Hits</th><th class=\"num\">False alarms</th>" +
+    "<th class=\"num\">d′</th><th class=\"num\">Median RT (ms)</th><th class=\"num\">Interrupted</th></tr></thead><tbody>" + rows + "</tbody></table>";
+}
+
+function showStatus({ status: s, fullscreen, saving, audio: a }) {
+  if (a && audio && a.running !== audio.running) { audio.running = a.running; showAudio(); }
+  if (a && (a.late || a.stray)) setLive("#live-audio", `${audio?.voice ?? ""} playing; ${a.late} cue${a.late === 1 ? "" : "s"} played late, ${a.stray} press${a.stray === 1 ? "" : "es"} outside any item`, a.late > 0);
   if (display && display.fullscreen !== fullscreen) { display.fullscreen = fullscreen; showDisplay(); }
   $("#progress").style.width = `${(100 * s.elapsed) / s.total}%`;
   const paused = s.state === "paused" ? " · paused" : "";
@@ -194,6 +220,7 @@ $("#btn-open").addEventListener("click", openStimulus);
 $("#btn-inline").addEventListener("click", openInline);
 $("#btn-start").addEventListener("click", () => {
   if (!display?.fullscreen && !confirm("The stimulus window is not full screen. Start anyway?")) return;
+  if (!(audio?.loaded && audio?.running) && !confirm("The audio is not ready (see the Audio line): the n-back would be silent. Start anyway?")) return;
   send("start");
 });
 $("#btn-pause").addEventListener("click", () => send(state === "paused" ? "resume" : "pause"));

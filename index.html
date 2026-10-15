@@ -52,7 +52,8 @@ input:disabled, select:disabled { opacity: .6; }
 .bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; margin-top: 14px; }
 .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s linear; }
 #files ul { margin: 8px 0 0; padding-left: 20px; }
-#files:empty { display: none; }
+#files:empty, #scores:empty { display: none; }
+#scores { margin-top: 14px; }
 #inline iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: 8px; margin-top: 14px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .muted { color: var(--muted); }
@@ -110,11 +111,13 @@ td.warn { color: var(--danger); font-weight: 600; }
   <dl class="live">
     <dt>Stimulus window</dt><dd id="live-window">not open</dd>
     <dt>Saving</dt><dd id="live-saving">checking…</dd>
+    <dt>Audio</dt><dd id="live-audio">—</dd>
     <dt>Load</dt><dd id="live-phase">—</dd>
     <dt>Visual</dt><dd id="live-visual">—</dd>
     <dt>Frames</dt><dd id="live-frames">—</dd>
   </dl>
   <div id="inline"></div>
+  <div class="table-scroll" id="scores"></div>
   <div id="files" aria-live="polite"></div>
 </section>
 

@@ -9,6 +9,8 @@ import { canvasField, stepLuminance, GAZE_RADIUS } from "./geometry.js";
 import { SessionRun } from "./session.js";
 import { Sink, serverAvailable } from "./sink.js";
 import { eventLogName, sessionFolder } from "./formats.js";
+import { AudioCues } from "./audio.js";
+import { TaskRun, RESPONSE_KEYS } from "./task.js";
 
 const canvas = document.getElementById("stage");
 const prompt = document.getElementById("prompt");
@@ -22,7 +24,9 @@ configureRenderer(THREE, renderer);
 const stage = createStage(THREE, renderer);
 stage.show(IDLE);
 
-let config = null, plan = null, run = null, sink = null, display = null, wake = null;
+let config = null, plan = null, run = null, task = null, sink = null, display = null, wake = null;
+const audio = new AudioCues();
+let audioLanguage = null, audioError = null;
 const notes = [];
 const serverP = serverAvailable();
 
@@ -38,6 +42,25 @@ function measure() {
   display = { vfov, aspect: w / h, css: [w, h], screen: [screen.width, screen.height], dpr: window.devicePixelRatio, fullscreen: isFullscreen() };
   stage.fitScreen(vfov, w / h);
   send({ type: "display", display });
+}
+
+async function loadAudio(language) {
+  if (audioLanguage === language) return sendAudio();
+  audioLanguage = language;
+  audioError = null;
+  sendAudio();
+  try { await audio.load(language); } catch (e) { audioError = `could not load the ${language} audio: ${e.message}`; }
+  sendAudio();
+}
+
+function sendAudio() {
+  send({ type: "audio", audio: { language: audioLanguage, loaded: audio.buffers.size > 0 && audio.manifest?.language === audioLanguage,
+    running: audio.running, error: audioError, voice: audio.manifest?.voice ?? null } });
+}
+
+/** Any click or key press in this window lets the browser start the audio. */
+function unlockAudio() {
+  if (!audio.running) audio.unlock().then(sendAudio, () => {});
 }
 
 function showPrompt() {
@@ -63,6 +86,8 @@ function sessionInfo(extra = {}) {
       aspect: display.aspect, window_css_px: display.css, screen_css_px: display.screen, device_pixel_ratio: display.dpr,
       largest_target_planned_deg: plan.maxDiameter, gaze_circle_radius_deg: GAZE_RADIUS },
     luminance: "nominal sRGB (no display profile)",
+    audio: { ...audio.info(), language: config.language, onsets: "expected time the sound leaves the output (Web Audio output timestamp)" },
+    nback: task ? { scores: task.scores, stray_presses: task.stray, late_cues: task.late, response_keys: [...RESPONSE_KEYS], mouse_buttons: "any button counts as a response during a session" } : null,
     files,
     saving: sink.mode, server_folder: sink.server ? sink.folder : null,
     browser: navigator.userAgent,
@@ -78,12 +103,14 @@ async function start() {
   const folder = sessionFolder(config.participant, "screen", now);
   files = { events: eventLogName(now), visual: "visual_log.csv" };
   sink = new Sink(folder, await serverP);
+  task = new TaskRun(plan, { audio, sink, onScore: (score) => send({ type: "score", score }) });
   run = new SessionRun(plan, {
     show: (step) => stage.show(step),
     luminance: (step) => stepLuminance(step, display),
     sink, files,
     hooks: {
       onStart: () => sink.write("session.json", JSON.stringify(sessionInfo({ status: "running" }), null, 1)),
+      onPause: (t) => task.pause(t),
       onEnd: (summary) => finish(summary),
     },
   });
@@ -94,6 +121,7 @@ async function start() {
 }
 
 async function finish(summary) {
+  task.end(summary.end_unix_ms - performance.timeOrigin, summary.status === "completed");
   stage.show(IDLE);
   wake?.release?.().catch(() => {});
   sink.write("session.json", JSON.stringify(sessionInfo({ status: summary.status, summary }), null, 1));
@@ -108,8 +136,9 @@ window.addEventListener("message", (e) => {
   const m = e.data;
   if (m.type === "setup" && !running()) {
     config = m.config; plan = m.plan;
-    run = null;                     // a finished session is replaced by the next one
+    run = null; task = null;        // a finished session is replaced by the next one
     measure(); showPrompt();
+    loadAudio(config.language);
   } else if (m.type === "preview" && !running()) { stage.show(m.step); prompt.hidden = true; }
   else if (m.type === "start") start();
   else if (m.type === "pause") run?.pause();
@@ -123,9 +152,18 @@ document.addEventListener("fullscreenchange", () => {
   if (running() && !isFullscreen()) notes.push({ unix_ms: Date.now(), session_s: run.elapsed(performance.now()), note: "left full screen" });
   measure(); showPrompt();
 });
-prompt.addEventListener("click", goFullscreen);
+prompt.addEventListener("click", () => { unlockAudio(); goFullscreen(); });
+window.addEventListener("pointerdown", (e) => {
+  unlockAudio();
+  if (running() && run.state === "running") task.press(e.timeStamp);
+});
 window.addEventListener("keydown", (e) => {
-  if (e.key === "f" || e.key === "F") { e.preventDefault(); goFullscreen(); }
+  unlockAudio();
+  if (e.key === "f" || e.key === "F") { e.preventDefault(); goFullscreen(); return; }
+  if (RESPONSE_KEYS.has(e.key)) {
+    e.preventDefault();                 // no scrolling or page keys while the window has the focus
+    if (!e.repeat && run?.state === "running") task.press(e.timeStamp);
+  }
 });
 window.addEventListener("beforeunload", (e) => { if (running()) { e.preventDefault(); e.returnValue = ""; } });
 window.addEventListener("pagehide", () => { if (running()) run.abort("stimulus window closed"); });
@@ -133,11 +171,13 @@ window.addEventListener("pagehide", () => { if (running()) run.abort("stimulus w
 let lastStatus = 0;
 renderer.setAnimationLoop((t) => {
   run?.frame(t);
+  if (task) task.frame(t, run.elapsed(t), run.state);
   renderer.render(stage.scene, stage.camera);
   if (t - lastStatus > 250) {
     lastStatus = t;
     if (running()) send({ type: "status", status: run.status(t), fullscreen: isFullscreen(),
-      saving: { mode: sink.mode, sent: sink.sent, error: sink.broken ? String(sink.broken.message || sink.broken) : null } });
+      saving: { mode: sink.mode, sent: sink.sent, error: sink.broken ? String(sink.broken.message || sink.broken) : null },
+      audio: { running: audio.running, late: task.late, stray: task.stray } });
   }
 });
 

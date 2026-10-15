@@ -152,33 +152,58 @@ uses no shading or tone mapping, as in the calibration presenter, so each pixel 
   - For 2- and 3-back, about 6 lures per block (equal to the digit *n* − 1 or *n* + 1 back, but not *n*), so
     familiarity alone does not work.
   - No targets in the first *n* items, and no more than two targets in a row.
-- **Response:** press on targets only. On screen this is Space, a presentation clicker (its Page Down, Right Arrow
-  or B keys are accepted) or any key chosen at setup; in VR it is the controller trigger. A press belongs to the item
-  being heard: from that item's onset to the next item's onset. The first press counts, and extra presses are logged.
+- **Response:** press on targets only. On screen this is Space, Enter, a presentation clicker (Page Up/Down, the
+  arrow keys, B and . are accepted) or any mouse button; in VR it is the controller trigger. A press belongs to the
+  item being heard: from that item's onset for one item interval (2.5 s). The first press counts, and extra presses
+  are logged. A pause inside the window cuts it short; the item is marked *interrupted* and left out of the scores.
 - **Scores per block:** hits, misses, false alarms, correct rejections, d′ and median reaction time. They are shown
   on the control window after each block; the participant gets no feedback during the session.
 - **Language:** Italian or English, chosen per participant.
 
 ### Audio
 
-The audio is generated offline by a script in the repo (`tools/make_audio.py`) with an open text-to-speech engine
-(Piper, with one Italian and one English voice; the voice licences are checked before the files are committed). It
-covers the digits 1–9 and the instruction phrases. The digits are trimmed, made equally loud and made to start at
-the same point, so the onset logged is the onset of speech. You evaluate the quality before it is used.
+The audio is generated offline by a script in the repo (`tools/make_audio.py`) with an open text-to-speech engine,
+Piper. Two candidate voices per language were generated for you to compare (`--candidates`); the defaults are the
+first of each:
+
+| Language | Voice | Training data |
+|---|---|---|
+| Italian | **paola** (medium) | Voice-Dataset-Italian, CC0 1.0 |
+| Italian | serena (high) | serena-synthetic-it-27h, CC BY 4.0 |
+| English | **cori** (high, British) | LibriVox recordings, public domain |
+| English | alba (medium, Scottish) | Edinburgh DataShare 10283/3270, CC BY 4.0 |
+
+It covers the digits 1–9 and the instruction phrases. Every clip is trimmed so that speech starts at its first
+sample, so the onset logged is the onset of speech. All clips are equally loud (−23 dBFS RMS over the speech, peaks
+below −1 dBFS), saved as 16-bit WAV, because compressed formats add encoder delay and would shift the onsets. You
+judge the quality before the clips are used.
 
 | Phrase | English | Italiano |
 |---|---|---|
 | Baseline, rests | Rest. Keep your eyes on the dot. | Riposo. Tieni lo sguardo sul punto. |
-| 0-back | Press when you hear *five*. | Premi quando senti *cinque*. |
+| 0-back | Zero back. Press when you hear *five*. | Zero indietro. Premi quando senti *cinque*. |
 | 1-back | One back. Press when the number is the same as the one before. | Uno indietro. Premi quando il numero è uguale al precedente. |
 | 2-back | Two back. Press when the number is the same as two before. | Due indietro. Premi quando il numero è uguale a quello di due prima. |
 | 3-back | Three back. Press when the number is the same as three before. | Tre indietro. Premi quando il numero è uguale a quello di tre prima. |
 | Start cue | Start. | Via. |
 | End | The end. Thank you. | Fine. Grazie. |
 
-The 0-back target digit is a separate recorded word inserted into the phrase, so all nine variants come from one
-recording. Audio is played with the Web Audio API, scheduled ahead of time; its onsets are mapped to the computer's
-clock with `getOutputTimestamp()`, and the output latency the browser reports is saved.
+The nine 0-back instructions are synthesised whole, one per target digit, so the digit is spoken with the
+sentence's own intonation.
+
+**When the cues play** (on the session clock, which stops while paused):
+
+- the rest phrase 0.3 s into the baseline, every rest and the final rest;
+- the next block's instruction 0.3 s into its instruction phase;
+- the start cue 1.25 s before the block;
+- the digits from the block's start, one every 2.5 s;
+- the end phrase 2.5 s before the end of the session.
+
+No clip runs into the next one; this is tested with both languages' clips. Audio is played with the Web Audio API,
+scheduled one second ahead. `getOutputTimestamp()` relates the audio clock to the frame clock at the output, so each
+clip is scheduled to be *heard* at its time, and its logged onset is when the browser expects it to leave the
+output, including its own estimate of the output latency. That estimate, and the latencies the browser reports,
+are saved in `session.json`; how accurate it is depends on the audio device (open issue 3).
 
 ## Displays and windows
 
@@ -224,7 +249,7 @@ time (ms), which is how the recordings of the eye tracker and the physiology log
 |---|---|
 | `<date>_event_log.csv` | cwtool's `event_log` format (`Event, Start Time, End Time, Duration (s), Start (unix s), End (unix s)`), one row per **load** phase: `Baseline`, `Instruction`, `0-back` … `3-back`, `Rest`, `Final rest`. Copy it into the recording folder and cwtool shades and averages ΔPD per load level. |
 | `visual_log.csv` | One row per visual **step**. The same six columns first (Event = condition), then segment, condition, step, background RGB, target RGB, target diameter (°), scene, nominal Y of the gaze circle and of the whole field, cd/m² (with a profile), and the frame onset. |
-| `nback_log.csv` | One row per item: block, n, item, digit, target, lure, onset (Unix ms), response (Unix ms), RT (ms), outcome, extra presses. |
+| `nback_log.csv` | One row per item heard: block, n, item, digit, target, lure, the 0-back target digit, onset (Unix ms), response (Unix ms), RT (ms), outcome, extra presses, interrupted. |
 | `session.json` | Participant, mode, language, seed and generator attempt, app version, screen geometry, display profile, frame statistics (mean frame time, dropped frames), audio output latency, browser. |
 | `calibration_run_*.csv` | When the calibration was played: the calibration presenter's run format, unchanged. |
 | `practice_nback_log.csv` | The practice, in the n-back format. |

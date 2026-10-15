@@ -1,0 +1,228 @@
+{
+ "language": "en",
+ "voice": "cori",
+ "model": "en/en_GB/cori/high/en_GB-cori-high",
+ "training_data": "LibriVox recordings, public domain",
+ "engine": "Piper (piper-tts), https://github.com/OHF-Voice/piper1-gpl",
+ "generated": "2026-10-15",
+ "sample_rate": 22050,
+ "target_rms_dbfs": -23.0,
+ "clips": {
+  "digit_1": {
+   "text": "One.",
+   "file": "digit_1.wav",
+   "duration_s": 0.4084,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -11.29,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0406
+  },
+  "digit_2": {
+   "text": "Two.",
+   "file": "digit_2.wav",
+   "duration_s": 0.4338,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -12.68,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0251
+  },
+  "digit_3": {
+   "text": "Three.",
+   "file": "digit_3.wav",
+   "duration_s": 0.6075,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -11.2,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0111
+  },
+  "digit_4": {
+   "text": "Four.",
+   "file": "digit_4.wav",
+   "duration_s": 0.5687,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -11.21,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.04
+  },
+  "digit_5": {
+   "text": "Five.",
+   "file": "digit_5.wav",
+   "duration_s": 0.419,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.3,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0
+  },
+  "digit_6": {
+   "text": "Six.",
+   "file": "digit_6.wav",
+   "duration_s": 0.5487,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -6.43,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.02
+  },
+  "digit_7": {
+   "text": "Seven.",
+   "file": "digit_7.wav",
+   "duration_s": 0.4489,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.47,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.03
+  },
+  "digit_8": {
+   "text": "Eight.",
+   "file": "digit_8.wav",
+   "duration_s": 0.4166,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.34,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0324
+  },
+  "digit_9": {
+   "text": "Nine.",
+   "file": "digit_9.wav",
+   "duration_s": 0.4762,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -10.56,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0426
+  },
+  "rest": {
+   "text": "Rest. Keep your eyes on the dot.",
+   "file": "rest.wav",
+   "duration_s": 1.9152,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -6.88,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0603
+  },
+  "back_0_1": {
+   "text": "Zero back. Press when you hear one.",
+   "file": "back_0_1.wav",
+   "duration_s": 2.0354,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.62,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0399
+  },
+  "back_0_2": {
+   "text": "Zero back. Press when you hear two.",
+   "file": "back_0_2.wav",
+   "duration_s": 1.9648,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.96,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0406
+  },
+  "back_0_3": {
+   "text": "Zero back. Press when you hear three.",
+   "file": "back_0_3.wav",
+   "duration_s": 2.1032,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -7.63,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.042
+  },
+  "back_0_4": {
+   "text": "Zero back. Press when you hear four.",
+   "file": "back_0_4.wav",
+   "duration_s": 2.2549,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.5,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.01
+  },
+  "back_0_5": {
+   "text": "Zero back. Press when you hear five.",
+   "file": "back_0_5.wav",
+   "duration_s": 2.3341,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -5.83,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0405
+  },
+  "back_0_6": {
+   "text": "Zero back. Press when you hear six.",
+   "file": "back_0_6.wav",
+   "duration_s": 2.2242,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -7.18,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0406
+  },
+  "back_0_7": {
+   "text": "Zero back. Press when you hear seven.",
+   "file": "back_0_7.wav",
+   "duration_s": 2.214,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.06,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0409
+  },
+  "back_0_8": {
+   "text": "Zero back. Press when you hear eight.",
+   "file": "back_0_8.wav",
+   "duration_s": 2.0247,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.04,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0406
+  },
+  "back_0_9": {
+   "text": "Zero back. Press when you hear nine.",
+   "file": "back_0_9.wav",
+   "duration_s": 2.205,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -5.9,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0399
+  },
+  "back_1": {
+   "text": "One back. Press when the number is the same as the one before.",
+   "file": "back_1.wav",
+   "duration_s": 3.5681,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.8,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0337
+  },
+  "back_2": {
+   "text": "Two back. Press when the number is the same as two before.",
+   "file": "back_2.wav",
+   "duration_s": 2.9927,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.5,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0305
+  },
+  "back_3": {
+   "text": "Three back. Press when the number is the same as three before.",
+   "file": "back_3.wav",
+   "duration_s": 3.3624,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.65,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0399
+  },
+  "start": {
+   "text": "Start.",
+   "file": "start.wav",
+   "duration_s": 0.6186,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -7.76,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0499
+  },
+  "end": {
+   "text": "The end. Thank you.",
+   "file": "end.wav",
+   "duration_s": 1.8243,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -7.92,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.0415
+  }
+ }
+}

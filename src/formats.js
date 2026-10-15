@@ -53,14 +53,14 @@ export const visualLogRow = (step, startMs, endMs, { yGaze = null, yField = null
 
 export const NBACK_LOG_HEADER = [
   "block", "n", "item", "digit", "target", "lure", "target_digit", "onset_unix_ms", "response_unix_ms", "rt_ms",
-  "outcome", "extra_presses",
+  "outcome", "extra_presses", "interrupted",
 ];
 
 /** One nback_log row. `it` is the generated item plus what happened: `{ onsetMs, responseMs, extra }`. */
 export const nbackLogRow = (block, n, item, it, targetDigit, outcome) => {
   const rt = it.responseMs != null ? Math.round(it.responseMs - it.onsetMs) : null;
   return csvRow([block, n, item, it.digit, it.target ? 1 : 0, it.lure ? 1 : 0, targetDigit, Math.round(it.onsetMs),
-    it.responseMs != null ? Math.round(it.responseMs) : null, rt, outcome, it.extra || 0]);
+    it.responseMs != null ? Math.round(it.responseMs) : null, rt, outcome, it.extra || 0, it.interrupted ? 1 : 0]);
 };
 
 /** Folder name of a session: `<participant>_<screen|vr>_<YYYY-MM-DD_HH-MM-SS>`, safe for any file system. */
