@@ -1,0 +1,50 @@
+site_name: Validation Task
+site_description: Screen and VR presenter for validating cwtool's luminance-compensated pupillometry and HRV against a graded cognitive load
+site_url: https://pignonig.github.io/cognitive_analysis_tool_validation/
+repo_url: https://github.com/pignoniG/cognitive_analysis_tool_validation
+repo_name: pignoniG/cognitive_analysis_tool_validation
+edit_uri: edit/main/docs/
+copyright: Giovanni Pignoni
+
+theme:
+  name: material
+  font:
+    text: Open Sans
+    code: Roboto Mono
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle: { icon: material/brightness-7, name: Dark mode }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle: { icon: material/brightness-4, name: Light mode }
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - tables
+  - toc: { permalink: true }
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - { name: mermaid, class: mermaid, format: !!python/name:pymdownx.superfences.fence_code_format }
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Design: design.md
+  - Open issues: OPEN_ISSUES.md

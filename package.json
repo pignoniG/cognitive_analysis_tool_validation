@@ -1,0 +1,9 @@
+{
+  "name": "cognitive-analysis-tool-validation",
+  "private": true,
+  "type": "module",
+  "description": "Validation task presenter for cwtool: no dependencies; package.json only marks the ES modules and runs the tests.",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\""
+  }
+}

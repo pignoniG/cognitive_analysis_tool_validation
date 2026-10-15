@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- Validation task presenter. For now the session preview: the load phases, the visual timeline and the n-back
+     blocks a participant ID generates. Becomes the experimenter's control window. See docs/design.md. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Validation Task</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --text: #1c2030; --muted: #667085; --line: #d9dde5;
+  /* project palette: #96D35F, #E32400, #FF7A4E, #E6643B, #C1441E, #9C2101 */
+  --accent: #C1441E; --accent-text: #ffffff; --danger: #E32400; --track: #e9ecf2; --focus: #9C2101; --link: #9C2101;
+  --rest: #d9dde5; --l0: #FFB08F; --l1: #FF7A4E; --l2: #C1441E; --l3: #7a1a01;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14161c; --panel: #1d2028; --text: #e7e9ef; --muted: #9aa1b2; --line: #333846;
+    --accent: #96D35F; --accent-text: #0e1020; --danger: #FF7A4E; --track: #262a35; --focus: #FF7A4E; --link: #FF7A4E;
+    --rest: #3a3f4d;
+  }
+}
+* { box-sizing: border-box; }
+html { color-scheme: light dark; accent-color: var(--accent); }
+a { color: var(--link); }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { padding: 20px 16px 8px; max-width: 1200px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 0 0 12px; }
+p.lead { margin: 0; color: var(--muted); max-width: 75ch; }
+main { max-width: 1200px; margin: 0 auto; padding: 8px 16px 48px; display: grid; gap: 16px; }
+section.card { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+input, button { font: inherit; color: var(--text); }
+input[type=text], input[type=number] { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+input[type=number] { width: 90px; }
+button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.muted { color: var(--muted); }
+#status { min-height: 1.4em; }
+#status.err { color: var(--danger); }
+.tl-scroll { overflow-x: auto; }
+.tl { min-width: 900px; }
+.tl svg { display: block; width: 100%; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 500; }
+td.num, th.num { text-align: right; }
+#nback td:not(.digits) { white-space: nowrap; }
+td.warn { color: var(--danger); font-weight: 600; }
+.table-scroll { overflow-x: auto; }
+.digits { font-family: ui-monospace, "Roboto Mono", monospace; font-size: 13px; letter-spacing: .5px; word-break: break-all; }
+.digits b { color: var(--accent); }
+.digits u { text-decoration: none; border-bottom: 2px dotted var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Validation Task</h1>
+  <p class="lead">Session preview: what a participant ID generates. The load phases, the visual timeline running
+  independently underneath, and the n-back blocks. The presenter itself comes next; see
+  <a href="docs/design.md">the design</a>.</p>
+</header>
+<main>
+<section class="card" aria-labelledby="h-setup">
+  <h2 id="h-setup">Participant and display</h2>
+  <div class="row">
+    <label>Participant ID (seed) <input type="text" id="participant" value="P01" autocomplete="off"></label>
+    <label>Screen height (cm) <input type="number" id="screen-h" value="33.6" min="1" step="0.1"></label>
+    <label>Viewing distance (cm) <input type="number" id="distance" value="55" min="1" step="1"></label>
+    <label>Largest whole target <input type="text" id="max-d" readonly tabindex="-1"></label>
+    <button id="btn-plan">Download plan (JSON)</button>
+  </div>
+  <p id="status" class="muted" aria-live="polite"></p>
+</section>
+
+<section class="card" aria-labelledby="h-tl">
+  <h2 id="h-tl">Timeline</h2>
+  <div class="tl-scroll"><div class="tl" id="timeline"></div></div>
+  <div class="legend" id="legend"></div>
+</section>
+
+<section class="card" aria-labelledby="h-bal">
+  <h2 id="h-bal">Balance</h2>
+  <p class="muted">Seconds each visual condition spends in each load state, and the deviation from an even split
+  (within ±25 % by design).</p>
+  <div class="table-scroll"><table id="balance"></table></div>
+</section>
+
+<section class="card" aria-labelledby="h-nb">
+  <h2 id="h-nb">n-back blocks</h2>
+  <p class="muted">Targets in bold, lures underlined.</p>
+  <div class="table-scroll"><table id="nback"></table></div>
+</section>
+</main>
+<script type="module" src="src/preview.js"></script>
+</body>
+</html>
