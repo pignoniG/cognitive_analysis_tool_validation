@@ -22,7 +22,7 @@ The same ID always gives the same session.
 | Local server (`server.py`) | done, with tests |
 | Session preview (`index.html`) | done |
 | Screen presenter: control page, stimulus window, all visual conditions, timing, pause, logging ([running a session](running.md)) | done; scenes are placeholders |
-| n-back audio: Piper clips in Italian and English, scheduling on the audio clock, responses, scores | done; voices to be judged |
+| n-back audio: Kokoro clips in Italian and English, scheduling on the audio clock, responses, scores | done; voices to be judged |
 | VR, zip download and crash recovery, photometry, calibration and practice, scenes | to do, in this order |
 
 ## Running the preview

@@ -21,12 +21,13 @@ downloaded at the end instead.
 
 ## Audio
 
-The spoken digits and instructions (Italian and English) are in `assets/audio/`, generated with Piper:
+The spoken digits and instructions (Italian and English) are in `assets/audio/`, generated offline with the
+Kokoro-82M text-to-speech model (Apache 2.0):
 
 ```sh
-pip install piper-tts numpy
+pip install kokoro-onnx soundfile numpy
 python tools/make_audio.py --candidates    # every candidate voice into audio_candidates/, to listen and compare
-python tools/make_audio.py                 # the chosen voices into assets/audio/ (--voice it=serena to change)
+python tools/make_audio.py                 # the chosen voices into assets/audio/ (--voice it=im_nicola to change)
 ```
 
 ## Tests

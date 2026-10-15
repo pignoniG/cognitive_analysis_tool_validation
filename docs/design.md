@@ -162,16 +162,20 @@ uses no shading or tone mapping, as in the calibration presenter, so each pixel 
 
 ### Audio
 
-The audio is generated offline by a script in the repo (`tools/make_audio.py`) with an open text-to-speech engine,
-Piper. Two candidate voices per language were generated for you to compare (`--candidates`); the defaults are the
-first of each:
+The audio is generated offline by a script in the repo (`tools/make_audio.py`) with an open text-to-speech model,
+Kokoro-82M (Apache 2.0), run offline through its ONNX export. Candidate voices were generated for you to compare
+(`--candidates`); the defaults are the first of each language:
 
-| Language | Voice | Training data |
+| Language | Voice | |
 |---|---|---|
-| Italian | **paola** (medium) | Voice-Dataset-Italian, CC0 1.0 |
-| Italian | serena (high) | serena-synthetic-it-27h, CC BY 4.0 |
-| English | **cori** (high, British) | LibriVox recordings, public domain |
-| English | alba (medium, Scottish) | Edinburgh DataShare 10283/3270, CC BY 4.0 |
+| Italian | **if_sara** | female |
+| Italian | im_nicola | male |
+| English | **bf_emma** | British, female |
+| English | bm_george | British, male |
+| English | af_heart | American, female |
+
+Piper was tried first and dropped. It clipped the start and end of single words ("due", "tre", "sei", "five"),
+mispronounced "sette", "otto" and "nine", and garbled "The end. Thank you."
 
 It covers the digits 1–9 and the instruction phrases. Every clip is trimmed so that speech starts at its first
 sample, so the onset logged is the onset of speech. All clips are equally loud (−23 dBFS RMS over the speech, peaks
@@ -181,11 +185,11 @@ judge the quality before the clips are used.
 | Phrase | English | Italiano |
 |---|---|---|
 | Baseline, rests | Rest. Keep your eyes on the dot. | Riposo. Tieni lo sguardo sul punto. |
-| 0-back | Zero back. Press when you hear *five*. | Zero indietro. Premi quando senti *cinque*. |
-| 1-back | One back. Press when the number is the same as the one before. | Uno indietro. Premi quando il numero è uguale al precedente. |
-| 2-back | Two back. Press when the number is the same as two before. | Due indietro. Premi quando il numero è uguale a quello di due prima. |
-| 3-back | Three back. Press when the number is the same as three before. | Tre indietro. Premi quando il numero è uguale a quello di tre prima. |
-| Start cue | Start. | Via. |
+| 0-back | Zero back. Press when you hear the number *five*. | Zero indietro. Premi quando senti il numero *cinque*. |
+| 1-back | One back. Press when a number is the same as the one just before. | Uno indietro. Premi quando un numero è uguale a quello appena prima. |
+| 2-back | Two back. Press when a number is the same as the one two numbers ago. | Due indietro. Premi quando un numero è uguale a quello di due numeri fa. |
+| 3-back | Three back. Press when a number is the same as the one three numbers ago. | Tre indietro. Premi quando un numero è uguale a quello di tre numeri fa. |
+| Start cue | Go! | Via! |
 | End | The end. Thank you. | Fine. Grazie. |
 
 The nine 0-back instructions are synthesised whole, one per target digit, so the digit is spoken with the

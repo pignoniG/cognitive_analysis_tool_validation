@@ -42,12 +42,12 @@ Each issue says where it is, why it matters, what the presenter currently does a
   and a photodiode into one audio interface) and compare them with the logged onsets.
 - **Status:** needs data.
 
-### 4. Piper's synthesis is not repeatable
-- **Where:** `tools/make_audio.py`.
-- **Problem:** Piper adds random noise when it synthesises, so running the script again gives slightly different
-  clips (durations differ by tens of milliseconds). The committed clips are what the sessions use; regenerating them
-  changes the stimulus.
-- **Now:** the clips are generated once and committed with their manifest (voice, model, date, durations, levels).
-  Regenerate only on purpose, and record it.
-- **Proposed:** keep it so: the clips are data, not build output.
+### 4. Regenerating the audio
+- **Where:** `tools/make_audio.py`, `assets/audio/`.
+- **Problem:** the clips are the stimulus; regenerating them with another version of the model, the phonemiser
+  (espeak-ng) or the script would change it between participants. (Piper, tried first, was not even repeatable from
+  one run to the next.)
+- **Now:** Kokoro gives the same clips run after run on the same set-up. The clips are committed with a manifest
+  (voice, model, date, durations, levels) and are what every session uses.
+- **Proposed:** regenerate only on purpose, before data collection starts, and record it.
 - **Status:** kept.

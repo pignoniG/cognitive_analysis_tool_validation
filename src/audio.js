@@ -63,6 +63,6 @@ export class AudioCues {
   info() {
     return { state: this.ctx.state, sample_rate: this.ctx.sampleRate, base_latency_s: this.ctx.baseLatency ?? null,
       output_latency_s: this.ctx.outputLatency ?? null, voice: this.manifest?.voice ?? null, model: this.manifest?.model ?? null,
-      training_data: this.manifest?.training_data ?? null, generated: this.manifest?.generated ?? null };
+      description: this.manifest?.description ?? null, generated: this.manifest?.generated ?? null };
   }
 }
