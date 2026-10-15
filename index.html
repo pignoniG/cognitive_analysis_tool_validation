@@ -45,6 +45,14 @@ button:disabled { opacity: .45; cursor: default; }
 button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
 button.danger { color: var(--danger); }
 input:disabled, select:disabled { opacity: .6; }
+[hidden] { display: none !important; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; align-self: end; }
+.seg label { display: block; color: var(--text); font-size: 14px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; padding: 7px 14px; cursor: pointer; }
+.seg input:checked + span { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+.seg input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: -2px; }
+.seg input:disabled + span { opacity: .6; cursor: default; }
 .live { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 14px 0 0; font-size: 14px; }
 .live dt { color: var(--muted); }
 .live dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
@@ -88,6 +96,10 @@ td.warn { color: var(--danger); font-weight: 600; }
 <section class="card" aria-labelledby="h-setup">
   <h2 id="h-setup">Participant and display</h2>
   <div class="row">
+    <div class="seg" role="radiogroup" aria-label="Where the participant sees the stimuli">
+      <label><input type="radio" name="mode" value="screen" checked><span>Monitor (glasses)</span></label>
+      <label><input type="radio" name="mode" value="vr"><span>Headset (VR)</span></label>
+    </div>
     <label>Participant ID (seed) <input type="text" id="participant" value="P01" autocomplete="off"></label>
     <label>Screen height (cm) <input type="number" id="screen-h" value="33.6" min="1" step="0.1"></label>
     <label>Viewing distance (cm) <input type="number" id="distance" value="55" min="1" step="1"></label>
@@ -101,8 +113,9 @@ td.warn { color: var(--danger); font-weight: 600; }
 <section class="card" aria-labelledby="h-run">
   <h2 id="h-run">Session</h2>
   <div class="row">
-    <button id="btn-open">Open stimulus window</button>
-    <button id="btn-inline" title="Show the stimulus in a frame on this page, to rehearse on one screen">Dry run in this page</button>
+    <button id="btn-open" data-mode="screen">Open stimulus window</button>
+    <button id="btn-inline" data-mode="screen" title="Show the stimulus in a frame on this page, to rehearse on one screen">Dry run in this page</button>
+    <button id="btn-vr" data-mode="vr" disabled>Enter VR</button>
     <button id="btn-start" class="primary" disabled>Start session</button>
     <button id="btn-pause" disabled>Pause</button>
     <button id="btn-abort" class="danger" disabled>Abort</button>

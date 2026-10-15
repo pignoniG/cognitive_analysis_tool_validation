@@ -1,10 +1,12 @@
-# Running a session on a monitor
+# Running a session
+
+## On a monitor
 
 For the glasses campaigns (Pupil Core, Pupil Neon). The experimenter uses the control page on their own display;
 the stimuli are shown in a second window, full screen on the participant's monitor, which also plays the n-back's
 audio and takes the participant's responses.
 
-## Before the participant arrives
+### Before the participant arrives
 
 1. **Monitor:** set a fixed brightness. Turn off HDR, automatic brightness, night shift and **local dimming** (with
    local dimming on, a target's luminance depends on its size). Darken the room; the monitor should be the only
@@ -29,7 +31,7 @@ audio and takes the participant's responses.
    table shows how evenly each condition falls on each load level. The n-back table lists every block's digits.
    **Download plan (JSON)** saves all of it.
 
-## The stimulus window
+### The stimulus window
 
 6. **Open stimulus window.** In Chrome and Edge the page asks for permission to manage windows; allow it, and the
    window opens on the other display. Otherwise drag it there. Allow pop-ups if the browser blocks it.
@@ -41,7 +43,7 @@ audio and takes the participant's responses.
    a target-size step, to measure the disc with a ruler. A 16° target at 55 cm should measure 2 × 55 × tan 8° =
    15.5 cm across.
 
-## The session
+### The session
 
 9. **Start session.** The session starts on the next frame with the baseline. Nothing but the stimulus is drawn in
    the stimulus window from then on.
@@ -61,6 +63,30 @@ audio and takes the participant's responses.
 
 At the end the *Saving* line confirms the folder on disk. The files are also listed for download, prefixed with
 the folder name.
+
+## In the headset
+
+For the VR campaign (Varjo XR-4). Here the control page runs the session itself and draws it in the headset; there
+is no second window.
+
+1. **On the Varjo computer**, start Varjo Base, then `python server.py`, and open <http://localhost:8000> in Chrome
+   or Edge. WebXR needs `localhost` or HTTPS, and the browser must run on the graphics card the headset is connected
+   to.
+2. **Choose Headset (VR).** The *Stimulus window* line says whether a WebXR headset was found. The screen size and
+   distance are not used: every target size fits in the headset.
+3. **Set up** as on a monitor (participant, language) and check the plan.
+4. **Enter VR.** The headset shows the gray field and the fixation point. The click also lets the page play sound;
+   the participant's headphones must be on this computer's audio output.
+5. **Start session** once the headset is on the participant and they are looking ahead. Everything except natural
+   scenes moves with the head: the field, the target and the fixation point are locked to the headset. A panorama
+   stays fixed in the room, turned so that its view direction is ahead of the participant when the scene starts.
+6. **Responses:** the controller's trigger. A clicker or key presses on this page work too.
+7. If the headset's session ends during the run (the headset taken off, the Varjo runtime restarting), the session
+   **pauses**. Enter VR again, then Resume. The exit is noted in `session.json`.
+
+The files are the same as on a monitor, in `sessions/<participant>_vr_<date>_<time>/`. Varjo's own recording (the
+gaze CSV and the capture video) is started in Varjo Base as usual. The nominal luminance in `visual_log.csv` is
+computed for cwtool's Varjo field of view (120° × 105°).
 
 ## Dry run in this page
 

@@ -5,8 +5,9 @@ A web presenter for validating the [Cognitive Workload Tool](https://github.com/
 known ways, on a monitor for eye-tracking glasses (Pupil Core, Pupil Neon) or inside a VR headset (Varjo XR-4,
 through WebXR). The same page, the same stimuli and the same files serve both.
 
-**Status:** sessions run on a monitor: the control page, a full-screen stimulus window, every visual condition
-(scenes are placeholders), the spoken n-back with responses and scores, and the logs. VR comes next. See [docs/design.md](docs/design.md) and
+**Status:** sessions run on a monitor (the control page and a full-screen stimulus window) or in a headset
+(WebXR, not yet tried on the Varjo): every visual condition (scenes are placeholders), the spoken n-back with
+responses and scores, and the logs. See [docs/running.md](docs/running.md). See [docs/design.md](docs/design.md) and
 [docs/running.md](docs/running.md).
 
 ## Run

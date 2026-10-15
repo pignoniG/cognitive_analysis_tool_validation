@@ -51,3 +51,14 @@ Each issue says where it is, why it matters, what the presenter currently does a
   (voice, model, date, durations, levels) and are what every session uses.
 - **Proposed:** regenerate only on purpose, before data collection starts, and record it.
 - **Status:** kept.
+
+### 5. VR mode not yet tried on the Varjo
+- **Where:** `src/vr.js`, `src/presenter.js`.
+- **Problem:** the headset mode was written without a headset at hand. Untested: entering VR from Chrome or Edge with
+  Varjo Base; the head-locked field, target and fixation point (drawn at 1 m, so with a little binocular disparity);
+  the panorama turned to the head at each scene; the trigger as response; the frame rate and dropped frames at
+  90 Hz; pausing when the headset leaves VR.
+- **Now:** the same session engine as on the monitor, which is tested; only the WebXR shell is new.
+- **Proposed:** a dry session on the Varjo (a full 28 minutes, with a few pauses and a headset removal), checking
+  the files against the Varjo recording.
+- **Status:** needs data.
