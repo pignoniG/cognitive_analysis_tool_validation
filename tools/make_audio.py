@@ -67,7 +67,7 @@ def phrases(lang: str) -> dict[str, str]:
             "back_2": "Due indietro. Premi quando un numero è uguale a quello di due numeri fa.",
             "back_3": "Tre indietro. Premi quando un numero è uguale a quello di tre numeri fa.",
             "start": "Via!",
-            "end": "Fine. Grazie.",
+            "end": "Fine esperimento.",
         }
     else:
         out |= {

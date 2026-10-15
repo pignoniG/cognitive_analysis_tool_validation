@@ -193,7 +193,7 @@ judge the quality before the clips are used.
 | 2-back | Two back. Press when a number is the same as the one two numbers ago. | Due indietro. Premi quando un numero è uguale a quello di due numeri fa. |
 | 3-back | Three back. Press when a number is the same as the one three numbers ago. | Tre indietro. Premi quando un numero è uguale a quello di tre numeri fa. |
 | Start cue | Go! | Via! |
-| End | The end. Thank you. | Fine. Grazie. |
+| End | The end. Thank you. | Fine esperimento. |
 
 The nine 0-back instructions are synthesised whole, one per target digit, so the digit is spoken with the
 sentence's own intonation.

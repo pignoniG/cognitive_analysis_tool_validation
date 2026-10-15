@@ -8,141 +8,6 @@
  "sample_rate": 24000,
  "target_rms_dbfs": -23.0,
  "clips": {
-  "rest": {
-   "text": "Riposo. Tieni lo sguardo sul punto.",
-   "file": "rest.wav",
-   "duration_s": 2.36,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.08,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.23
-  },
-  "back_0_1": {
-   "text": "Zero indietro. Premi quando senti il numero uno.",
-   "file": "back_0_1.wav",
-   "duration_s": 3.02,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.06,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.27
-  },
-  "back_0_2": {
-   "text": "Zero indietro. Premi quando senti il numero due.",
-   "file": "back_0_2.wav",
-   "duration_s": 3.05,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.5,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.27
-  },
-  "back_0_3": {
-   "text": "Zero indietro. Premi quando senti il numero tre.",
-   "file": "back_0_3.wav",
-   "duration_s": 2.99,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.01,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.27
-  },
-  "back_0_4": {
-   "text": "Zero indietro. Premi quando senti il numero quattro.",
-   "file": "back_0_4.wav",
-   "duration_s": 3.28,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -10.05,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.26
-  },
-  "back_0_5": {
-   "text": "Zero indietro. Premi quando senti il numero cinque.",
-   "file": "back_0_5.wav",
-   "duration_s": 3.29,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.65,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.23
-  },
-  "back_0_6": {
-   "text": "Zero indietro. Premi quando senti il numero sei.",
-   "file": "back_0_6.wav",
-   "duration_s": 3.11,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.65,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.23
-  },
-  "back_0_7": {
-   "text": "Zero indietro. Premi quando senti il numero sette.",
-   "file": "back_0_7.wav",
-   "duration_s": 3.18,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.36,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.26
-  },
-  "back_0_8": {
-   "text": "Zero indietro. Premi quando senti il numero otto.",
-   "file": "back_0_8.wav",
-   "duration_s": 3.11,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.75,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.26
-  },
-  "back_0_9": {
-   "text": "Zero indietro. Premi quando senti il numero nove.",
-   "file": "back_0_9.wav",
-   "duration_s": 3.0793,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.57,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.2707
-  },
-  "back_1": {
-   "text": "Uno indietro. Premi quando un numero è uguale a quello appena prima.",
-   "file": "back_1.wav",
-   "duration_s": 4.06,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.53,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.23
-  },
-  "back_2": {
-   "text": "Due indietro. Premi quando un numero è uguale a quello di due numeri fa.",
-   "file": "back_2.wav",
-   "duration_s": 4.1648,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -8.61,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.2252
-  },
-  "back_3": {
-   "text": "Tre indietro. Premi quando un numero è uguale a quello di tre numeri fa.",
-   "file": "back_3.wav",
-   "duration_s": 4.1652,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -10.02,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.2248
-  },
-  "start": {
-   "text": "Via!",
-   "file": "start.wav",
-   "duration_s": 0.5788,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -10.33,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.2112
-  },
-  "end": {
-   "text": "Fine. Grazie.",
-   "file": "end.wav",
-   "duration_s": 1.17,
-   "rms_dbfs": -23.0,
-   "peak_dbfs": -9.51,
-   "peak_limited": false,
-   "trimmed_lead_s": 0.23
-  },
   "digit_1": {
    "text": "Uno.",
    "file": "digit_1.wav",
@@ -295,6 +160,141 @@
    "raw_s": 5.24,
    "device": "mps",
    "generated": "2026-10-15"
+  },
+  "rest": {
+   "text": "Riposo. Tieni lo sguardo sul punto.",
+   "file": "rest.wav",
+   "duration_s": 2.36,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.08,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.23
+  },
+  "back_0_1": {
+   "text": "Zero indietro. Premi quando senti il numero uno.",
+   "file": "back_0_1.wav",
+   "duration_s": 3.02,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.06,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.27
+  },
+  "back_0_2": {
+   "text": "Zero indietro. Premi quando senti il numero due.",
+   "file": "back_0_2.wav",
+   "duration_s": 3.05,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.5,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.27
+  },
+  "back_0_3": {
+   "text": "Zero indietro. Premi quando senti il numero tre.",
+   "file": "back_0_3.wav",
+   "duration_s": 2.99,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.01,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.27
+  },
+  "back_0_4": {
+   "text": "Zero indietro. Premi quando senti il numero quattro.",
+   "file": "back_0_4.wav",
+   "duration_s": 3.28,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -10.05,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.26
+  },
+  "back_0_5": {
+   "text": "Zero indietro. Premi quando senti il numero cinque.",
+   "file": "back_0_5.wav",
+   "duration_s": 3.29,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.65,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.23
+  },
+  "back_0_6": {
+   "text": "Zero indietro. Premi quando senti il numero sei.",
+   "file": "back_0_6.wav",
+   "duration_s": 3.11,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.65,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.23
+  },
+  "back_0_7": {
+   "text": "Zero indietro. Premi quando senti il numero sette.",
+   "file": "back_0_7.wav",
+   "duration_s": 3.18,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.36,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.26
+  },
+  "back_0_8": {
+   "text": "Zero indietro. Premi quando senti il numero otto.",
+   "file": "back_0_8.wav",
+   "duration_s": 3.11,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.75,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.26
+  },
+  "back_0_9": {
+   "text": "Zero indietro. Premi quando senti il numero nove.",
+   "file": "back_0_9.wav",
+   "duration_s": 3.0793,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.57,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.2707
+  },
+  "back_1": {
+   "text": "Uno indietro. Premi quando un numero è uguale a quello appena prima.",
+   "file": "back_1.wav",
+   "duration_s": 4.06,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -9.53,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.23
+  },
+  "back_2": {
+   "text": "Due indietro. Premi quando un numero è uguale a quello di due numeri fa.",
+   "file": "back_2.wav",
+   "duration_s": 4.1648,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.61,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.2252
+  },
+  "back_3": {
+   "text": "Tre indietro. Premi quando un numero è uguale a quello di tre numeri fa.",
+   "file": "back_3.wav",
+   "duration_s": 4.1652,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -10.02,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.2248
+  },
+  "start": {
+   "text": "Via!",
+   "file": "start.wav",
+   "duration_s": 0.5788,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -10.33,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.2112
+  },
+  "end": {
+   "text": "Fine esperimento.",
+   "file": "end.wav",
+   "duration_s": 1.29,
+   "rms_dbfs": -23.0,
+   "peak_dbfs": -8.96,
+   "peak_limited": false,
+   "trimmed_lead_s": 0.23
   }
  }
 }
