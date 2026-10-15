@@ -41,9 +41,9 @@ VOICES = {
         "im_nicola": {"lang": "it", "description": "Italian, male"},
     },
     "en": {
+        "af_heart": {"lang": "en-us", "description": "American English, female"},   # chosen, October 2026
         "bf_emma": {"lang": "en-gb", "description": "British English, female"},
         "bm_george": {"lang": "en-gb", "description": "British English, male"},
-        "af_heart": {"lang": "en-us", "description": "American English, female"},
     },
 }
 

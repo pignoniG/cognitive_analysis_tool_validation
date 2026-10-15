@@ -1,9 +1,9 @@
 {
  "language": "en",
- "voice": "bf_emma",
- "description": "British English, female",
+ "voice": "af_heart",
+ "description": "American English, female",
  "model": "Kokoro-82M v1.0 (hexgrad/Kokoro-82M, Apache 2.0), ONNX export of kokoro-onnx",
- "phonemiser": "espeak-ng, language en-gb",
+ "phonemiser": "espeak-ng, language en-us",
  "generated": "2026-10-15",
  "sample_rate": 24000,
  "target_rms_dbfs": -23.0,
@@ -11,218 +11,218 @@
   "digit_1": {
    "text": "One.",
    "file": "digit_1.wav",
-   "duration_s": 0.679,
+   "duration_s": 0.4173,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.19,
+   "peak_dbfs": -9.76,
    "peak_limited": false,
-   "trimmed_lead_s": 0.211
+   "trimmed_lead_s": 0.3927
   },
   "digit_2": {
    "text": "Two.",
    "file": "digit_2.wav",
-   "duration_s": 0.6299,
+   "duration_s": 0.4456,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -6.77,
+   "peak_dbfs": -11.29,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2101
+   "trimmed_lead_s": 0.3844
   },
   "digit_3": {
    "text": "Three.",
    "file": "digit_3.wav",
-   "duration_s": 0.6897,
+   "duration_s": 0.5082,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -6.82,
+   "peak_dbfs": -8.89,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2002
+   "trimmed_lead_s": 0.3718
   },
   "digit_4": {
    "text": "Four.",
    "file": "digit_4.wav",
-   "duration_s": 0.5693,
+   "duration_s": 0.46,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.85,
+   "peak_dbfs": -8.79,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2008
+   "trimmed_lead_s": 0.37
   },
   "digit_5": {
    "text": "Five.",
    "file": "digit_5.wav",
-   "duration_s": 0.52,
+   "duration_s": 0.53,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.61,
+   "peak_dbfs": -7.23,
    "peak_limited": false,
-   "trimmed_lead_s": 0.21
+   "trimmed_lead_s": 0.39
   },
   "digit_6": {
    "text": "Six.",
    "file": "digit_6.wav",
-   "duration_s": 0.6428,
+   "duration_s": 0.5192,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -6.94,
+   "peak_dbfs": -7.16,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2072
+   "trimmed_lead_s": 0.3808
   },
   "digit_7": {
    "text": "Seven.",
    "file": "digit_7.wav",
-   "duration_s": 0.8498,
+   "duration_s": 0.5,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -6.54,
+   "peak_dbfs": -9.09,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2102
+   "trimmed_lead_s": 0.38
   },
   "digit_8": {
    "text": "Eight.",
    "file": "digit_8.wav",
-   "duration_s": 0.4898,
+   "duration_s": 0.4487,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -8.4,
+   "peak_dbfs": -9.21,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2002
+   "trimmed_lead_s": 0.4013
   },
   "digit_9": {
    "text": "Nine.",
    "file": "digit_9.wav",
-   "duration_s": 0.9091,
+   "duration_s": 0.4999,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -8.54,
+   "peak_dbfs": -10.91,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2109
+   "trimmed_lead_s": 0.3901
   },
   "rest": {
    "text": "Rest. Keep your eyes on the dot.",
    "file": "rest.wav",
-   "duration_s": 1.78,
+   "duration_s": 1.7993,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.68,
+   "peak_dbfs": -5.8,
    "peak_limited": false,
-   "trimmed_lead_s": 0.26
+   "trimmed_lead_s": 0.3108
   },
   "back_0_1": {
    "text": "Zero back. Press when you hear the number one.",
    "file": "back_0_1.wav",
-   "duration_s": 2.3083,
+   "duration_s": 2.4891,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.93,
+   "peak_dbfs": -5.61,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2617
+   "trimmed_lead_s": 0.3209
   },
   "back_0_2": {
    "text": "Zero back. Press when you hear the number two.",
    "file": "back_0_2.wav",
-   "duration_s": 2.3399,
+   "duration_s": 2.4596,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.6,
+   "peak_dbfs": -5.28,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2701
+   "trimmed_lead_s": 0.3004
   },
   "back_0_3": {
    "text": "Zero back. Press when you hear the number three.",
    "file": "back_0_3.wav",
-   "duration_s": 2.3499,
+   "duration_s": 2.5197,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -8.11,
+   "peak_dbfs": -5.64,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2701
+   "trimmed_lead_s": 0.3203
   },
   "back_0_4": {
    "text": "Zero back. Press when you hear the number four.",
    "file": "back_0_4.wav",
-   "duration_s": 2.3278,
+   "duration_s": 2.5179,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -8.23,
+   "peak_dbfs": -5.22,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2622
+   "trimmed_lead_s": 0.3121
   },
   "back_0_5": {
    "text": "Zero back. Press when you hear the number five.",
    "file": "back_0_5.wav",
-   "duration_s": 2.499,
+   "duration_s": 2.5797,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.42,
+   "peak_dbfs": -5.48,
    "peak_limited": false,
-   "trimmed_lead_s": 0.271
+   "trimmed_lead_s": 0.3203
   },
   "back_0_6": {
    "text": "Zero back. Press when you hear the number six.",
    "file": "back_0_6.wav",
-   "duration_s": 2.35,
+   "duration_s": 2.5396,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.71,
+   "peak_dbfs": -5.12,
    "peak_limited": false,
-   "trimmed_lead_s": 0.27
+   "trimmed_lead_s": 0.3204
   },
   "back_0_7": {
    "text": "Zero back. Press when you hear the number seven.",
    "file": "back_0_7.wav",
-   "duration_s": 2.3996,
+   "duration_s": 2.5991,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.72,
+   "peak_dbfs": -5.45,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2704
+   "trimmed_lead_s": 0.3209
   },
   "back_0_8": {
    "text": "Zero back. Press when you hear the number eight.",
    "file": "back_0_8.wav",
-   "duration_s": 2.32,
+   "duration_s": 2.4296,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.87,
+   "peak_dbfs": -5.01,
    "peak_limited": false,
-   "trimmed_lead_s": 0.27
+   "trimmed_lead_s": 0.3004
   },
   "back_0_9": {
    "text": "Zero back. Press when you hear the number nine.",
    "file": "back_0_9.wav",
-   "duration_s": 2.3399,
+   "duration_s": 2.5189,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -7.54,
+   "peak_dbfs": -5.32,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2701
+   "trimmed_lead_s": 0.3211
   },
   "back_1": {
    "text": "One back. Press when a number is the same as the one just before.",
    "file": "back_1.wav",
-   "duration_s": 3.259,
+   "duration_s": 3.5997,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -6.64,
+   "peak_dbfs": -6.57,
    "peak_limited": false,
-   "trimmed_lead_s": 0.281
+   "trimmed_lead_s": 0.3103
   },
   "back_2": {
    "text": "Two back. Press when a number is the same as the one two numbers ago.",
    "file": "back_2.wav",
-   "duration_s": 3.4873,
+   "duration_s": 3.7155,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -6.25,
+   "peak_dbfs": -6.08,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2827
+   "trimmed_lead_s": 0.3045
   },
   "back_3": {
    "text": "Three back. Press when a number is the same as the one three numbers ago.",
    "file": "back_3.wav",
-   "duration_s": 3.5996,
+   "duration_s": 3.8999,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -6.3,
+   "peak_dbfs": -5.95,
    "peak_limited": false,
-   "trimmed_lead_s": 0.2704
+   "trimmed_lead_s": 0.3201
   },
   "start": {
    "text": "Go!",
    "file": "start.wav",
-   "duration_s": 0.51,
+   "duration_s": 0.4193,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -10.21,
+   "peak_dbfs": -9.54,
    "peak_limited": false,
-   "trimmed_lead_s": 0.21
+   "trimmed_lead_s": 0.3907
   },
   "end": {
    "text": "The end. Thank you.",
    "file": "end.wav",
-   "duration_s": 1.14,
+   "duration_s": 1.1892,
    "rms_dbfs": -23.0,
-   "peak_dbfs": -9.34,
+   "peak_dbfs": -8.16,
    "peak_limited": false,
-   "trimmed_lead_s": 0.25
+   "trimmed_lead_s": 0.3508
   }
  }
 }

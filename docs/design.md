@@ -170,9 +170,9 @@ Kokoro-82M (Apache 2.0), run offline through its ONNX export. Candidate voices w
 |---|---|---|
 | Italian | **if_sara** | female |
 | Italian | im_nicola | male |
-| English | **bf_emma** | British, female |
+| English | **af_heart** | American, female (chosen) |
+| English | bf_emma | British, female |
 | English | bm_george | British, male |
-| English | af_heart | American, female |
 
 Piper was tried first and dropped. It clipped the start and end of single words ("due", "tre", "sei", "five"),
 mispronounced "sette", "otto" and "nine", and garbled "The end. Thank you."
