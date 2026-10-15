@@ -5,8 +5,9 @@ A web presenter for validating the [Cognitive Workload Tool](https://github.com/
 known ways, on a monitor for eye-tracking glasses (Pupil Core, Pupil Neon) or inside a VR headset (Varjo XR-4,
 through WebXR). The same page, the same stimuli and the same files serve both.
 
-**Status:** design agreed, scaffold in place. The page shows a session preview (what a participant ID generates);
-the presenter itself is being built. See [docs/design.md](docs/design.md).
+**Status:** sessions run on a monitor: the control page, a full-screen stimulus window, every visual condition
+(scenes are placeholders) and the logs. The n-back audio and VR come next. See [docs/design.md](docs/design.md) and
+[docs/running.md](docs/running.md).
 
 ## Run
 
@@ -29,7 +30,7 @@ python -m unittest discover tests      # the local server
 
 | Path | What |
 |---|---|
-| `index.html`, `src/` | the page and its ES modules: seeding, the load and visual timelines, the n-back, file formats |
+| `index.html`, `stimulus.html`, `src/` | the control page, the stimulus window and their ES modules: seeding, timelines, n-back, the session engine, the three.js stage, file formats, saving |
 | `server.py` | optional local server that saves sessions to disk |
 | `vendor/` | three.js r186, reduced to the classes used |
 | `docs/` | design, open issues; built with mkdocs like cwtool's docs |

@@ -1,6 +1,7 @@
 <!doctype html>
-<!-- Validation task presenter. For now the session preview: the load phases, the visual timeline and the n-back
-     blocks a participant ID generates. Becomes the experimenter's control window. See docs/design.md. -->
+<!-- Validation task presenter: the experimenter's control page. It previews what a participant ID generates (load
+     phases, visual timeline, n-back blocks) and runs the session in a stimulus window on the participant's
+     display (stimulus.html). See docs/design.md. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -35,11 +36,24 @@ main { max-width: 1200px; margin: 0 auto; padding: 8px 16px 48px; display: grid;
 section.card { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; }
 label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
-input, button { font: inherit; color: var(--text); }
-input[type=text], input[type=number] { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+input, button, select { font: inherit; color: var(--text); }
+input[type=text], input[type=number], select { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
 input[type=number] { width: 90px; }
 button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
-button:hover { border-color: var(--accent); }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button.danger { color: var(--danger); }
+input:disabled, select:disabled { opacity: .6; }
+.live { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 14px 0 0; font-size: 14px; }
+.live dt { color: var(--muted); }
+.live dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.live .warn { color: var(--danger); }
+.bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; margin-top: 14px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s linear; }
+#files ul { margin: 8px 0 0; padding-left: 20px; }
+#files:empty { display: none; }
+#inline iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: 8px; margin-top: 14px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .muted { color: var(--muted); }
 #status { min-height: 1.4em; }
@@ -64,8 +78,9 @@ td.warn { color: var(--danger); font-weight: 600; }
 <body>
 <header>
   <h1>Validation Task</h1>
-  <p class="lead">Session preview: what a participant ID generates. The load phases, the visual timeline running
-  independently underneath, and the n-back blocks. The presenter itself comes next; see
+  <p class="lead">Set up and run a session on a monitor. The stimuli are shown in a second window on the
+  participant's display; this page controls it and shows the plan the participant ID generates: the load phases,
+  the visual timeline running independently underneath, and the n-back blocks. See
   <a href="docs/design.md">the design</a>.</p>
 </header>
 <main>
@@ -76,9 +91,31 @@ td.warn { color: var(--danger); font-weight: 600; }
     <label>Screen height (cm) <input type="number" id="screen-h" value="33.6" min="1" step="0.1"></label>
     <label>Viewing distance (cm) <input type="number" id="distance" value="55" min="1" step="1"></label>
     <label>Largest whole target <input type="text" id="max-d" readonly tabindex="-1"></label>
+    <label>Language <select id="language"><option value="it">Italiano</option><option value="en">English</option></select></label>
     <button id="btn-plan">Download plan (JSON)</button>
   </div>
   <p id="status" class="muted" aria-live="polite"></p>
+</section>
+
+<section class="card" aria-labelledby="h-run">
+  <h2 id="h-run">Session</h2>
+  <div class="row">
+    <button id="btn-open">Open stimulus window</button>
+    <button id="btn-inline" title="Show the stimulus in a frame on this page, to rehearse on one screen">Dry run in this page</button>
+    <button id="btn-start" class="primary" disabled>Start session</button>
+    <button id="btn-pause" disabled>Pause</button>
+    <button id="btn-abort" class="danger" disabled>Abort</button>
+  </div>
+  <div class="bar" aria-hidden="true"><i id="progress"></i></div>
+  <dl class="live">
+    <dt>Stimulus window</dt><dd id="live-window">not open</dd>
+    <dt>Saving</dt><dd id="live-saving">checking…</dd>
+    <dt>Load</dt><dd id="live-phase">—</dd>
+    <dt>Visual</dt><dd id="live-visual">—</dd>
+    <dt>Frames</dt><dd id="live-frames">—</dd>
+  </dl>
+  <div id="inline"></div>
+  <div id="files" aria-live="polite"></div>
 </section>
 
 <section class="card" aria-labelledby="h-tl">
@@ -100,6 +137,6 @@ td.warn { color: var(--danger); font-weight: 600; }
   <div class="table-scroll"><table id="nback"></table></div>
 </section>
 </main>
-<script type="module" src="src/preview.js"></script>
+<script type="module" src="src/control.js"></script>
 </body>
 </html>

@@ -1,5 +1,7 @@
 // The session's parameters, as in docs/design.md. Times are in seconds, sizes in degrees of visual angle.
 
+export const APP_VERSION = "0.1.0";
+
 export const SESSION = {
   baseline: 120,        // rest before the first instruction
   instruction: 10,      // spoken instruction before each block

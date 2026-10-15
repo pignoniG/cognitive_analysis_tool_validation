@@ -1,4 +1,5 @@
-// Session preview: draws what a participant ID generates (load phases, visual timeline, n-back blocks).
+// Session preview: what a participant ID generates (load phases, visual timeline, n-back blocks), drawn into the
+// control page. `makePlan` builds the plan the stimulus window runs; `renderPreview` draws it.
 
 import { SESSION, NBACK, VISUAL } from "./config.js";
 import { loadTimeline, totalDuration } from "./load.js";
@@ -18,10 +19,7 @@ const TYPE_COLOURS = {
 };
 const STATE_VAR = { rest: "--rest", "0-back": "--l0", "1-back": "--l1", "2-back": "--l2", "3-back": "--l3" };
 const rgb = (c) => `rgb(${c.join(",")})`;
-const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, "0")}`;
-
-/** Visual angle (°) of `size` cm at `distance` cm. */
-const angle = (size, distance) => (2 * Math.atan(size / 2 / distance) * 180) / Math.PI;
+const mmss = (t) => { const s = Math.round(t); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 
 function el(tag, attrs = {}, parent) {
   const e = document.createElementNS(SVG, tag);
@@ -31,36 +29,32 @@ function el(tag, attrs = {}, parent) {
 }
 const tip = (node, text) => { el("title", {}, node).textContent = text; return node; };
 
-let plan = null;
-
-function build() {
-  const participant = $("#participant").value.trim();
-  const h = Number($("#screen-h").value), d = Number($("#distance").value);
-  const maxDiameter = h > 0 && d > 0 ? angle(h, d) : Infinity;
-  $("#max-d").value = Number.isFinite(maxDiameter) ? `${maxDiameter.toFixed(1)}°` : "—";
-  const status = $("#status");
-  status.className = "muted";
-  if (!participant) { status.textContent = "Enter a participant ID."; return; }
-  try {
-    const phases = loadTimeline(participant);
-    const visual = visualTimeline(participant, phases, { maxDiameter });
-    const items = SESSION.block / NBACK.soa;
-    const blocks = phases.filter((p) => p.kind === "block").map((p) => ({ ...p, ...nbackBlock(participant, p.block, p.level, items) }));
-    plan = { participant, maxDiameter, phases, visual, blocks };
-    const dropped = VISUAL.target.sizes.filter((s) => s > maxDiameter);
-    status.textContent = `${mmss(totalDuration(phases))} min, ${visual.segments.length} visual segments, ` +
-      `${visual.steps.length} steps (generator attempt ${visual.attempt + 1}, largest deviation ` +
-      `${Math.round(visual.balance.cost * 100)} %).` + (dropped.length ? ` Sizes ${dropped.join("°, ")}° do not fit and are left out.` : "");
-    drawTimeline(phases, visual);
-    drawBalance(visual.balance);
-    drawBlocks(blocks);
-  } catch (e) {
-    status.className = "err";
-    status.textContent = e.message;
-  }
+/** Everything a participant ID generates, for a display whose largest whole target is `maxDiameter` (°). */
+export function makePlan(participant, maxDiameter = Infinity) {
+  const phases = loadTimeline(participant);
+  const visual = visualTimeline(participant, phases, { maxDiameter });
+  const items = SESSION.block / NBACK.soa;
+  const blocks = phases.filter((p) => p.kind === "block").map((p) => ({ ...p, ...nbackBlock(participant, p.block, p.level, items) }));
+  return { participant, maxDiameter: Number.isFinite(maxDiameter) ? maxDiameter : null, phases, visual, blocks };
 }
 
-function drawTimeline(phases, visual) {
+/** A one-line summary of a plan. */
+export function describePlan(plan) {
+  const { phases, visual, maxDiameter } = plan;
+  const dropped = VISUAL.target.sizes.filter((s) => maxDiameter !== null && s > maxDiameter);
+  return `${mmss(totalDuration(phases))} min, ${visual.segments.length} visual segments, ${visual.steps.length} steps ` +
+    `(generator attempt ${visual.attempt + 1}, largest deviation ${Math.round(visual.balance.cost * 100)} %).` +
+    (dropped.length ? ` Sizes ${dropped.join("°, ")}° do not fit and are left out.` : "");
+}
+
+/** Draw `plan`; `onStep(step)` is called when a step of the timeline is clicked. */
+export function renderPreview(plan, { onStep } = {}) {
+  drawTimeline(plan.phases, plan.visual, onStep);
+  drawBalance(plan.visual.balance);
+  drawBlocks(plan.blocks);
+}
+
+function drawTimeline(phases, visual, onStep) {
   const T = totalDuration(phases), L = 92, W = 1100, x = (t) => L + ((W - L - 4) * t) / T;
   const svg = el("svg", { viewBox: `0 0 ${W} 150`, role: "img", "aria-label": "Session timeline" });
   const css = getComputedStyle(document.documentElement);
@@ -97,7 +91,8 @@ function drawTimeline(phases, visual) {
   }
   for (const st of visual.steps) {
     const x0 = x(st.start), w = Math.max(0.5, x(st.start + st.duration) - x0);
-    const g = el("g", {}, svg);
+    const g = el("g", onStep ? { style: "cursor: pointer" } : {}, svg);
+    if (onStep) g.addEventListener("click", () => onStep(st));
     el("rect", { x: x0, y: 78, width: w, height: 60, fill: st.scene ? "url(#hatch)" : rgb(st.field) }, g);
     if (st.target) {
       const th = Math.max(2, (60 * st.target.diameter) / 32);
@@ -112,7 +107,7 @@ function drawTimeline(phases, visual) {
   $("#legend").innerHTML =
     Object.entries(STATE_VAR).map(([s, c]) => `<span><i style="background:var(${c})"></i>${s === "rest" ? "Rest, instruction" : s}</span>`).join("") +
     Object.entries(TYPE_NAMES).map(([t, n]) => `<span><i style="background:${TYPE_COLOURS[t]}"></i>${n}</span>`).join("") +
-    `<span>Stimulus row: the field's colour; a target is the inner bar, its height in proportion to its diameter (32° = full height); scenes are hatched.</span>`;
+    `<span>Stimulus row: the field's colour; a target is the inner bar, its height in proportion to its diameter (32° = full height); scenes are hatched. Click a step to show it in the stimulus window.</span>`;
 }
 
 function drawBalance({ overlap, expected, states }) {
@@ -134,16 +129,4 @@ function drawBlocks(blocks) {
   $("#nback").innerHTML = `<thead>${head}</thead><tbody>${rows}</tbody>`;
 }
 
-function downloadPlan() {
-  if (!plan) return;
-  const blob = new Blob([JSON.stringify(plan, null, 1)], { type: "application/json" });
-  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `plan_${plan.participant.replace(/[^\w-]+/g, "-")}.json` });
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-}
-
-let timer;
-for (const id of ["#participant", "#screen-h", "#distance"]) $(id).addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(build, 200); });
-$("#btn-plan").addEventListener("click", downloadPlan);
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", build);
-build();
+export { mmss, TYPE_NAMES };

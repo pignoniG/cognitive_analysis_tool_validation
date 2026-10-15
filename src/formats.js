@@ -15,7 +15,7 @@ const pad = (v, n = 2) => String(v).padStart(n, "0");
 
 /** ISO 8601 local time with milliseconds and the UTC offset, e.g. 2026-10-15T12:34:56.789+02:00. */
 export function isoLocal(unixMs) {
-  const d = new Date(unixMs);
+  const d = new Date(Math.round(unixMs));   // the same millisecond as the Unix column
   const off = -d.getTimezoneOffset();
   const sign = off >= 0 ? "+" : "-";
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}` +
@@ -68,4 +68,12 @@ export function sessionFolder(participant, mode, unixMs) {
   const d = new Date(unixMs);
   const safe = String(participant).trim().replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "anonymous";
   return `${safe}_${mode}_${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** The event_log file name, dated like tools/event_logger.py: `2026-Oct-15_12-00-00_event_log.csv`. */
+export function eventLogName(unixMs) {
+  const d = new Date(unixMs);
+  return `${d.getFullYear()}-${MONTHS[d.getMonth()]}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}_event_log.csv`;
 }

@@ -21,7 +21,8 @@ The same ID always gives the same session.
 | Seeded generators (load order, visual timeline, n-back) and file formats | done, with tests |
 | Local server (`server.py`) | done, with tests |
 | Session preview (`index.html`) | done |
-| Screen presenter, n-back audio, VR, saving, photometry, calibration and practice, scenes | to do, in this order |
+| Screen presenter: control page, stimulus window, all visual conditions, timing, pause, logging ([running a session](running.md)) | done; scenes are placeholders |
+| n-back audio, VR, zip download and crash recovery, photometry, calibration and practice, scenes | to do, in this order |
 
 ## Running the preview
 

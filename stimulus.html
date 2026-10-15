@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- The stimulus window for sessions on a monitor. Opened by the control page (index.html), moved to the
+     participant's display and made full screen; it draws the stimuli, owns the timing and writes the session files. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Validation Task: stimulus</title>
+<style>
+html, body { margin: 0; height: 100%; overflow: hidden; background: rgb(128, 128, 128); }
+canvas { display: block; width: 100vw; height: 100vh; }
+:fullscreen, :fullscreen canvas { cursor: none; }
+/* shown only while no session is running: a session never draws anything but the stimulus */
+#prompt {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 32em;
+  font: 17px/1.45 "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center;
+  padding: 14px 20px; border-radius: 8px; background: rgba(40, 40, 40, .8); color: #fff; cursor: pointer;
+}
+#prompt[hidden] { display: none; }
+#prompt small { display: block; margin-top: 6px; opacity: .75; font-size: 14px; }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="prompt" role="button" tabindex="0">Waiting for the control page…</div>
+<script type="module" src="src/stimulus.js"></script>
+</body>
+</html>

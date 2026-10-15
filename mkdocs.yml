@@ -47,4 +47,5 @@ extra_css:
 nav:
   - Home: index.md
   - Design: design.md
+  - Running a session: running.md
   - Open issues: OPEN_ISSUES.md
