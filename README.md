@@ -21,14 +21,21 @@ downloaded at the end instead.
 
 ## Audio
 
-The spoken digits and instructions (Italian and English) are in `assets/audio/`, generated offline with the
-Kokoro-82M text-to-speech model (Apache 2.0):
+The spoken digits and instructions are in `assets/audio/`, generated offline: English with Kokoro-82M (Apache 2.0,
+voice af_heart); Italian phrases with Kokoro (voice im_nicola) and Italian digits with Chatterbox Multilingual (MIT),
+imitating the phrases' voice. See [docs/design.md](docs/design.md#audio).
 
 ```sh
 pip install kokoro-onnx soundfile numpy
 python tools/make_audio.py --candidates    # every candidate voice into audio_candidates/, to listen and compare
-python tools/make_audio.py                 # the chosen voices into assets/audio/ (--voice it=im_nicola to change)
+python tools/make_audio.py                 # the chosen voices into assets/audio/
+
+# in a separate Python 3.10–3.13 environment
+pip install chatterbox-tts "setuptools<81" numpy
+python tools/make_digits_chatterbox.py     # the Italian digits (--takes 3=2 to change a take)
 ```
+
+Both print where to listen to the result (`audio_candidates/current.html`, served by `server.py`).
 
 ## Tests
 

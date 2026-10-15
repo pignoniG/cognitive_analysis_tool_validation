@@ -162,20 +162,23 @@ uses no shading or tone mapping, as in the calibration presenter, so each pixel 
 
 ### Audio
 
-The audio is generated offline by a script in the repo (`tools/make_audio.py`) with an open text-to-speech model,
-Kokoro-82M (Apache 2.0), run offline through its ONNX export. Candidate voices were generated for you to compare
-(`--candidates`); the defaults are the first of each language:
+The audio is generated offline, with open text-to-speech models, by two scripts in the repo:
 
-| Language | Voice | |
-|---|---|---|
-| Italian | **if_sara** | female |
-| Italian | im_nicola | male |
-| English | **af_heart** | American, female (chosen) |
-| English | bf_emma | British, female |
-| English | bm_george | British, male |
+- **English:** every clip from Kokoro-82M (Apache 2.0), voice **af_heart** (American, female), with
+  `tools/make_audio.py`.
+- **Italian:** the phrases from Kokoro, voice **im_nicola** (male). Kokoro's Italian voices read single digits
+  badly, so the digits come from Chatterbox Multilingual (Resemble AI, MIT), given Kokoro nicola's phrases as the
+  voice to imitate, with `tools/make_digits_chatterbox.py`. Chatterbox is random, so each digit has a fixed seed per
+  take, and the takes were chosen by listening. When it goes on babbling after a word, everything after the first
+  pause longer than 0.3 s is cut. Chatterbox marks its output with an inaudible watermark (Perth), which stays in
+  the clips.
 
-Piper was tried first and dropped. It clipped the start and end of single words ("due", "tre", "sei", "five"),
-mispronounced "sette", "otto" and "nine", and garbled "The end. Thank you."
+Other voices tried, and why they were dropped:
+
+- Piper: it clipped the start and end of single words ("due", "tre", "sei", "five"), mispronounced "sette", "otto"
+  and "nine", and garbled "The end. Thank you."
+- Kokoro if_sara (Italian), bf_emma and bm_george (British English): judged by listening; af_heart and nicola were
+  preferred.
 
 It covers the digits 1–9 and the instruction phrases. Every clip is trimmed so that speech starts at its first
 sample, so the onset logged is the onset of speech. All clips are equally loud (−23 dBFS RMS over the speech, peaks

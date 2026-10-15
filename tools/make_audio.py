@@ -37,8 +37,10 @@ MODEL_FILES = ("kokoro-v1.0.onnx", "voices-v1.0.bin")
 # --voice says otherwise. `lang` is the espeak-ng language used to phonemise the text.
 VOICES = {
     "it": {
+        # chosen, October 2026: the phrases from Kokoro, the digits from Chatterbox imitating this voice
+        # (tools/make_digits_chatterbox.py), because Kokoro's Italian digits were unusable
+        "im_nicola": {"lang": "it", "description": "Italian, male", "digits": "chatterbox"},
         "if_sara": {"lang": "it", "description": "Italian, female"},
-        "im_nicola": {"lang": "it", "description": "Italian, male"},
     },
     "en": {
         "af_heart": {"lang": "en-us", "description": "American English, female"},   # chosen, October 2026
@@ -142,6 +144,26 @@ def process(audio: np.ndarray, rate: int) -> tuple[np.ndarray, dict]:
                   "peak_limited": bool(limited), "trimmed_lead_s": round(a / rate, 4)}
 
 
+def first_utterance(audio: np.ndarray, rate: int, gap: float = 0.3) -> np.ndarray:
+    """The audio up to the end of the first burst of speech: bursts of loud 20 ms windows (within 20 dB of the
+    loudest) closer than `gap` s belong together, so a word's own closures (the double t of "sette", 0.2 s) are
+    kept and anything after a longer pause (Chatterbox sometimes goes on babbling after a single word) is cut.
+    The decay after the last loud window is kept up to 0.15 s, until the level falls 35 dB below the loudest."""
+    win = int(0.020 * rate)
+    n = len(audio) // win
+    rms = np.sqrt(np.mean(audio[: n * win].reshape(n, win) ** 2, axis=1))
+    loud = np.flatnonzero(rms > rms.max() * 10 ** (-20 / 20))
+    end = loud[0]
+    for i in loud[1:]:
+        if (i - end - 1) * win / rate > gap:
+            break
+        end = i
+    tail = end + 1
+    while tail < n and tail - end <= int(0.15 / 0.020) and rms[tail] > rms.max() * 10 ** (-35 / 20):
+        tail += 1
+    return audio[: tail * win]
+
+
 def write_wav(path: Path, clip: np.ndarray, rate: int) -> None:
     with wave.open(str(path), "wb") as w:
         w.setnchannels(1)
@@ -150,13 +172,24 @@ def write_wav(path: Path, clip: np.ndarray, rate: int) -> None:
         w.writeframes(np.round(np.clip(clip, -1, 1) * 32767).astype("<i2").tobytes())
 
 
-def generate(kokoro, lang: str, name: str, out: Path) -> None:
+def generate(kokoro, lang: str, name: str, out: Path, keep_digits: bool = False) -> None:
+    """Every clip of `lang` in voice `name` into `out`; with `keep_digits`, the digits already there (made by
+    another engine) and their manifest entries are kept."""
     info = VOICES[lang][name]
     out.mkdir(parents=True, exist_ok=True)
+    kept = {}
+    if keep_digits and (out / "manifest.json").exists():
+        kept = {k: v for k, v in json.loads((out / "manifest.json").read_text())["clips"].items()
+                if k.startswith("digit_") and "engine" in v}
     for old in out.glob("*.wav"):
-        old.unlink()
+        if old.stem not in kept:
+            old.unlink()
     clips = {}
     for cid, text in phrases(lang).items():
+        if keep_digits and cid.startswith("digit_"):
+            if cid in kept:
+                clips[cid] = kept[cid]
+            continue
         audio, rate = kokoro.create(text, voice=name, lang=info["lang"], trim=False)
         clip, levels = process(np.asarray(audio, dtype=np.float64), rate)
         write_wav(out / f"{cid}.wav", clip, rate)
@@ -168,6 +201,9 @@ def generate(kokoro, lang: str, name: str, out: Path) -> None:
         "sample_rate": rate, "target_rms_dbfs": TARGET_RMS_DB, "clips": clips,
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n")
+    if keep_digits and len(kept) < 9:
+        print(f"  {lang}: the digits come from tools/make_digits_chatterbox.py; run it next")
+        return
     digits = [clips[f"digit_{i}"]["duration_s"] for i in range(1, 10)]
     longest = max(clips.values(), key=lambda c: c["duration_s"])
     print(f"{lang}/{name}: {len(clips)} clips; digits {min(digits):.2f}–{max(digits):.2f} s; "
@@ -197,6 +233,28 @@ def candidates_page(root: Path) -> None:
         "a.onended=()=>t.classList.remove('on');a.play();});</script>")
 
 
+def clips_page() -> Path:
+    """audio_candidates/current.html: every clip the sessions use (assets/audio/), with a play button each."""
+    rows = []
+    for lang in VOICES:
+        m = json.loads((ROOT / "assets" / "audio" / lang / "manifest.json").read_text())
+        rows.append(f"<h2>{ {'it': 'Italiano', 'en': 'English'}[lang] }: {m['voice']}</h2><table>" + "".join(
+            f'<tr><td><button data-src="../assets/audio/{lang}/{c["file"]}">▶</button></td><td>{c["text"]}</td>'
+            f'<td><small>{c["duration_s"]:.2f} s{" · " + c["engine"].split(" (")[0] + " take " + str(c["take"]) if "engine" in c else ""}</small></td></tr>'
+            for c in m["clips"].values()) + "</table>")
+    out = ROOT / "audio_candidates" / "current.html"
+    out.parent.mkdir(exist_ok=True)
+    out.write_text(
+        "<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
+        "<title>Session clips</title><style>body{font:14px/1.4 system-ui;margin:16px}table{border-collapse:collapse}"
+        "td{padding:3px 8px;border-bottom:1px solid #ccc}small{color:#666}button{font-size:15px;width:36px;height:30px;cursor:pointer}"
+        "button.on{background:#C1441E;color:#fff}</style><h1>The clips the sessions use</h1>" + "".join(rows) +
+        "<script>let a=null,b=null;document.addEventListener('click',e=>{const t=e.target.closest('button[data-src]');"
+        "if(!t)return;if(a)a.pause();if(b)b.classList.remove('on');a=new Audio(t.dataset.src);b=t;t.classList.add('on');"
+        "a.onended=()=>t.classList.remove('on');a.play();});</script>")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--candidates", action="store_true", help="every candidate voice into audio_candidates/")
@@ -222,7 +280,8 @@ def main() -> int:
             ap.error(f"unknown voice {item}")
         chosen[lang] = name
     for lang, name in chosen.items():
-        generate(kokoro, lang, name, ROOT / "assets" / "audio" / lang)
+        generate(kokoro, lang, name, ROOT / "assets" / "audio" / lang, keep_digits=VOICES[lang][name].get("digits") == "chatterbox")
+    print(f"Listen at {clips_page().relative_to(ROOT)} (served by server.py)")
     return 0
 
 
