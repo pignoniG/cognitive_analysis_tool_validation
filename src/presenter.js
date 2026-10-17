@@ -9,6 +9,7 @@ import { stepLuminance, GAZE_RADIUS } from "./geometry.js";
 import { SessionRun } from "./session.js";
 import { Sink, serverAvailable } from "./sink.js";
 import { eventLogName, sessionFolder } from "./formats.js";
+import { CalibrationRun } from "./calibration.js";
 import { AudioCues } from "./audio.js";
 import { loadScenes, sceneInfo } from "./scenes.js";
 import { TaskRun, RESPONSE_KEYS } from "./task.js";
@@ -100,6 +101,14 @@ export class Presenter {
     const now = Date.now();
     const folder = sessionFolder(this.config.participant, this.mode, now);
     this.files = { events: eventLogName(now), visual: "visual_log.csv" };
+    this.calibration = null;               // the calibration as played, for its run file
+    if (this.plan.pre.calibration) {
+      this.files.calibration = `calibration_run_${folder}.csv`;
+      this.calibration = new CalibrationRun(this.plan.pre.calibration, { participant: this.config.participant, mode: this.mode, runId: folder,
+        tool: `validation-task ${APP_VERSION} (the calibration part of a session)` }, {
+        time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone, screen: `${screen.width}x${screen.height} @${window.devicePixelRatio}`,
+        color_gamut_p3: matchMedia("(color-gamut: p3)").matches, hdr: matchMedia("(dynamic-range: high)").matches, user_agent: navigator.userAgent });
+    }
     const sink = this.sink = new Sink(folder, await this.serverP);
     const task = this.task = new TaskRun(this.plan, { audio: this.audio, sink, onScore: (score) => this.emit({ type: "score", score }) });
     this.run = new SessionRun(this.plan, {
@@ -108,12 +117,18 @@ export class Presenter {
       sink, files: this.files,
       hooks: {
         onStart: () => sink.write("session.json", JSON.stringify(this.sessionInfo({ status: "running" }), null, 1)),
+        onStepClosed: (step, startMs, endMs, why) => this.calibrationStep(step, startMs, endMs, why),
         onPause: (t) => task.pause(t),
         onEnd: (summary) => this.finish(summary),
       },
     });
     this.run.start();
     this.emit({ type: "started", folder, saving: sink.mode });
+  }
+
+  /** The calibration's run file is rewritten as each of its steps closes, so a crash loses only the running one. */
+  calibrationStep(step, startMs, endMs, why) {
+    if (this.calibration?.step(step, startMs, endMs, why)) this.sink.write(this.files.calibration, this.calibration.csv());
   }
 
   pause() { this.run?.pause(); }
@@ -142,6 +157,7 @@ export class Presenter {
     const { sink } = this;
     this.task.end(summary.end_unix_ms - performance.timeOrigin, summary.status === "completed");
     this.stage.show(IDLE);
+    if (this.calibration && !this.calibration.empty) sink.write(this.files.calibration, this.calibration.csv(true));
     sink.write("session.json", JSON.stringify(this.sessionInfo({ status: summary.status, summary }), null, 1));
     const complete = await sink.flush();
     this.emit({ type: "done", summary, folder: sink.folder, saving: sink.mode, diskComplete: sink.server ? complete : null,
@@ -155,11 +171,13 @@ export class Presenter {
       participant: config.participant, seed: config.participant, language: config.language,
       generator_attempt: plan.visual.attempt, balance_max_deviation: plan.visual.balance.cost,
       load_order: plan.phases.filter((p) => p.kind === "block").map((p) => p.level),
+      prelude: { calibration: plan.options.calibration, practice: plan.options.practice, duration_s: plan.pre.duration,
+        calibration_sequence: plan.pre.calibration ? "full calibration, scrambled by participant ID (cwtool.calibration.scrambled(DEFAULT, participant))" : null },
       display: { ...this.display(), largest_target_planned_deg: plan.maxDiameter, gaze_circle_radius_deg: GAZE_RADIUS },
       luminance: "nominal sRGB (no display profile); natural scenes: not computed",
       scenes: this.scenes ? sceneInfo(this.scenes.manifest, this.scenes.ids) : { error: this.scenesError ?? "not loaded" },
       audio: { ...this.audio.info(), language: config.language, onsets: "expected time the sound leaves the output (Web Audio output timestamp)" },
-      nback: task ? { scores: task.scores, stray_presses: task.stray, late_cues: task.late,
+      nback: task ? { scores: task.scores, practice_scores: task.practiceScores, stray_presses: task.stray, late_cues: task.late,
         responses: this.mode === "vr" ? "controller trigger (select); keys as on the monitor" : [...RESPONSE_KEYS, "any mouse button"] } : null,
       files: this.files,
       saving: sink.mode, server_folder: sink.server ? sink.folder : null,

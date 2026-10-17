@@ -105,6 +105,8 @@ td.warn { color: var(--danger); font-weight: 600; }
     <label>Viewing distance (cm) <input type="number" id="distance" value="100" min="1" step="1"></label>
     <label>Largest whole target <input type="text" id="max-d" readonly tabindex="-1"></label>
     <label>Language <select id="language"><option value="it">Italiano</option><option value="en">English</option></select></label>
+    <label class="check" title="The calibration presenter's full calibration sequence (about 5 min), at the start of the same recording"><input type="checkbox" id="calibration" checked> Calibration (5 min)</label>
+    <label class="check" title="Each n-back level once on a gray field, with feedback tones (4 min)"><input type="checkbox" id="practice" checked> n-back practice (4 min)</label>
     <button id="btn-plan">Download plan (JSON)</button>
   </div>
   <p id="status" class="muted" aria-live="polite"></p>

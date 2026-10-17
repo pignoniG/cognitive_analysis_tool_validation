@@ -12,6 +12,26 @@ export const SESSION = {
   rounds: 2,            // each round is one permutation of the levels
 };
 
+// The calibration is the calibration presenter's default sequence ("full calibration", docs/calibration-tool of
+// cwtool), played at the start of the same recording, so one recording holds the calibration and the validation.
+export const CALIBRATION = {
+  leadIn: 5,            // s of neutral gray before the first step, as the presenter's default
+  leadGray: 128,
+  presetSeed: "calibration",   // the seed of the preset order (cwtool.calibration.PRESET_SEED)
+  grayLengths: { 0: 20, 36: 15, 73: 10, 109: 8, 146: 6, 182: 6, 219: 6, 255: 12 },   // gray level: seconds
+  colourLevels: [64, 128, 191, 255],
+  colourSeconds: 8,     // each colour, and the black step before it
+  repeats: [73, 182],   // grays shown again, 8 s each
+};
+
+// The n-back practice: each level once, on a constant gray field, with a feedback sound on every press.
+export const PRACTICE = {
+  levels: [0, 1, 2, 3],
+  items: 20,            // per level (50 s)
+  instruction: 10,
+  lures: 2,             // per 2- and 3-back block
+};
+
 export const NBACK = {
   soa: 2.5,             // one digit every 2.5 s, so 60 items per block
   digits: [1, 2, 3, 4, 5, 6, 7, 8, 9],

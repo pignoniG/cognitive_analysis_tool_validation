@@ -22,11 +22,12 @@ let mode = store.get("mode") === "vr" ? "vr" : "screen";         // screen (glas
 let vr = null, vrState = null;                                    // the headset side, once created
 let audio = null;                                                 // what the stimulus window reports about its audio
 const scores = [];
-const SETUP_INPUTS = ["#participant", "#screen-h", "#distance", "#language"];
+const SETUP_INPUTS = ["#participant", "#screen-h", "#distance", "#language", "#calibration", "#practice"];
 
 function setup() {
   return { participant: $("#participant").value.trim(), screenCm: Number($("#screen-h").value),
-    distanceCm: Number($("#distance").value), language: $("#language").value, mode, appVersion: APP_VERSION };
+    distanceCm: Number($("#distance").value), language: $("#language").value, mode, appVersion: APP_VERSION,
+    calibration: $("#calibration").checked, practice: $("#practice").checked };
 }
 
 function build() {
@@ -40,7 +41,7 @@ function build() {
   if (!c.participant) status.textContent = "Enter a participant ID.";
   else {
     try {
-      plan = makePlan(c.participant, maxDiameter);
+      plan = makePlan(c.participant, maxDiameter, { calibration: c.calibration, practice: c.practice });
       status.textContent = describePlan(plan);
       renderPreview(plan, { onStep: previewStep });
     } catch (e) {
@@ -203,7 +204,7 @@ function showAudio() {
 
 function showScores() {
   if (!scores.length) { $("#scores").replaceChildren(); return; }
-  const rows = scores.map((s) => `<tr><td>${s.block}</td><td>${s.n}-back</td><td class="num">${s.hit}/${s.hit + s.miss}</td>` +
+  const rows = scores.map((s) => `<tr><td>${s.practice ? "practice " : ""}${s.block}</td><td>${s.n}-back</td><td class="num">${s.hit}/${s.hit + s.miss}</td>` +
     `<td class="num">${s.false_alarm}</td><td class="num">${s.dprime.toFixed(2)}</td><td class="num">${s.medianRt === null ? "—" : Math.round(s.medianRt)}</td>` +
     `<td class="num">${s.interrupted || ""}</td></tr>`).join("");
   $("#scores").innerHTML = "<table><thead><tr><th>Block</th><th>Level</th><th class=\"num\">Hits</th><th class=\"num\">False alarms</th>" +
@@ -219,7 +220,8 @@ function showStatus({ status: s, fullscreen, saving, audio: a }) {
   setLive("#live-phase", s.phase
     ? `${s.phase} · ${mmss(s.phaseLeft)} left · phase ${s.phaseIndex} of ${s.phases} · ${mmss(s.elapsed)} of ${mmss(s.total)}${paused}`
     : "starting…");
-  setLive("#live-visual", s.segment ? `segment ${s.segment}: ${TYPE_NAMES[s.condition]}${s.variant ? ` (${s.variant})` : ""}` : "—");
+  setLive("#live-visual", s.condition
+    ? `${s.segment ? `segment ${s.segment}: ` : ""}${TYPE_NAMES[s.condition]}${s.variant ? ` (${s.variant})` : ""}${!s.segment && s.stepLabel ? `: ${s.stepLabel}` : ""}` : "—");
   setLive("#live-frames", s.frameMs ? `${s.frameMs.toFixed(1)} ms per frame (${(1000 / s.frameMs).toFixed(0)} Hz), ` +
     `${s.dropped} dropped${s.pauses ? `, ${s.pauses} pause${s.pauses > 1 ? "s" : ""}` : ""}` : `${s.frames} frames`, s.dropped > 0);
   if (saving.error) setLive("#live-saving", `disk copy interrupted (${saving.error}); everything is kept in the ${mode === "vr" ? "page" : "stimulus window"} and rewritten at the end`, true);
@@ -335,8 +337,9 @@ setInterval(updateButtons, 1000);   // notices a stimulus window closed by hand
 let timer;
 for (const id of SETUP_INPUTS) {
   const saved = store.get(id.slice(1));
-  if (saved !== null && id !== "#participant") $(id).value = saved;
-  $(id).addEventListener("input", () => { store.set(id.slice(1), $(id).value); clearTimeout(timer); timer = setTimeout(build, 200); });
+  const box = $(id).type === "checkbox";
+  if (saved !== null && id !== "#participant") { if (box) $(id).checked = saved === "1"; else $(id).value = saved; }
+  $(id).addEventListener("input", () => { store.set(id.slice(1), box ? ($(id).checked ? "1" : "0") : $(id).value); clearTimeout(timer); timer = setTimeout(build, 200); });
 }
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => plan && renderPreview(plan, { onStep: previewStep }));
 serverAvailable().then((ok) => setLive("#live-saving", ok ? "to disk through server.py (sessions/)" : savingMemoryText(), !ok));

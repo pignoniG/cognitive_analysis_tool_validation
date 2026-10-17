@@ -15,7 +15,8 @@ export class SessionRun {
   /**
    * `plan`: `{ phases, visual: { steps } }`. Options: `show(step)` puts a step on the display; `luminance(step)` gives
    * its `{ yGaze, yField }`; `sink` and `files` (`{ events, visual }` names) receive the rows; `hooks` get
-   * `onStart(t)`, `onPhase(phase, t)`, `onPause(t)`, `onResume(t)` and `onEnd(summary)`.
+   * `onStart(t)`, `onPhase(phase, t)`, `onStepClosed(step, startUnixMs, endUnixMs, why)` (`why`: next, pause or end),
+   * `onPause(t)`, `onResume(t)` and `onEnd(summary)`.
    */
   constructor(plan, { show, luminance = () => ({}), sink, files, hooks = {}, unix = (t) => performance.timeOrigin + t }) {
     Object.assign(this, { plan, show, luminance, sink, files, hooks, unix });
@@ -68,7 +69,7 @@ export class SessionRun {
       this.hooks.onStart?.(t);
     } else if (this.state === "running" && req === "pause") {
       this.#closePhase(t);
-      this.#closeStep(t);
+      this.#closeStep(t, "pause");
       this.pauseStart = t;
       this.state = "paused";
       this.hooks.onPause?.(t);
@@ -94,7 +95,7 @@ export class SessionRun {
     }
     let changed = false;   // a step is logged even when a stalled frame jumped over all of it
     while (this.stepIdx + 1 < this.steps.length && e >= this.steps[this.stepIdx + 1].start) {
-      this.#closeStep(t);
+      this.#closeStep(t, "next");
       const step = this.steps[++this.stepIdx];
       this.openStep = { step, start: t, change: step.change };
       changed = true;
@@ -112,7 +113,7 @@ export class SessionRun {
       state: this.state, elapsed: e, total: this.total,
       phase: phase?.label ?? null, phaseLeft: phase ? Math.max(0, phase.start + phase.duration - e) : null,
       phaseIndex: this.phaseIdx + 1, phases: this.phases.length,
-      segment: step?.segment ?? null, condition: step?.type ?? null, variant: step?.variant ?? null,
+      segment: step?.segment ?? null, condition: step?.type ?? null, variant: step?.variant ?? null, stepLabel: step?.colour ?? null,
       frames: this.nIntervals + (this.t0 === null ? 0 : 1), dropped: this.dropped, frameMs: this.refInterval,
       pauses: this.pauses.length,
     };
@@ -134,10 +135,11 @@ export class SessionRun {
     this.openPhase = null;
   }
 
-  #closeStep(t) {
+  #closeStep(t, why) {
     if (!this.openStep) return;
     const { step, start, change } = this.openStep;
     this.sink.append(this.files.visual, visualLogRow({ ...step, change }, this.unix(start), this.unix(t), this.luminance(step)));
+    this.hooks.onStepClosed?.(step, this.unix(start), this.unix(t), why);
     this.openStep = null;
   }
 
@@ -147,7 +149,7 @@ export class SessionRun {
       this.pauses.push({ start_unix_ms: this.unix(this.pauseStart), duration_s: (t - this.pauseStart) / 1000, at_s: this.elapsed(this.pauseStart) });
     } else {
       this.#closePhase(t);
-      this.#closeStep(t);
+      this.#closeStep(t, "end");
     }
     const reached = this.elapsed(t);
     this.state = "done";

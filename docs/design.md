@@ -30,10 +30,26 @@ session lasts at most 30 minutes, excluding setup.
 1. Device setup and eye-tracker calibration.
 2. **Display check** (glasses: screen size and viewing distance, so sizes can be set in degrees) and, if a
    photometer is available, the **display characterisation** (see [Photometry](#photometry)).
-3. **Participant calibration** (optional): the cwtool calibration sequence (about 5 min), played by the same page
-   and saved in the calibration presenter's run format.
-4. **n-back practice**: about 20 items of each level, on a constant gray field, with a feedback sound. It is saved
-   separately and not counted in the session.
+
+### Before the session, in the same recording (not counted in the 30 minutes)
+
+Calibration and practice are played by the same page as the first phases of the recording, so one recording (and one
+event log) holds the calibration of the pupil model and the validation. Both are optional, on by default.
+
+1. **Calibration** (about 5 min): cwtool's *full calibration* sequence, ported exactly from the calibration presenter
+   (`cwtool.calibration`): 34 full-field steps of 291 s, after a 5 s gray lead-in. The 8 grays of Eckert et al.
+   (2022), longer the darker; red, green and blue at 64, 128, 191 and 255, each after its linked black step; two
+   grays repeated. The order is the presenter's "scrambled, seeded by participant" (the preset order scrambled again
+   with the participant ID, no two consecutive levels next to each other in brightness), so the same ID gives the
+   same order here, in the presenter and in `cwtool.calibration.scrambled(DEFAULT, id)`. The only spoken cue is the
+   rest phrase at the start ("keep your gaze on the point"). It is saved as `calibration_run_*.csv` in the
+   presenter's run format. It comes first, with the participant fresh and nothing else to do.
+   *Departure from the standalone presenter:* the fixation point is shown (it is in every condition of this tool), so
+   gaze is steady and the calibration and the validation are recorded the same way. It covers under 0.1 deg².
+2. **n-back practice** (4 min): each level once (0-, 1-, 2-, 3-back), 10 s of spoken instruction and 20 items
+   (50 s) each, on a constant gray field, with feedback tones on every press (a high tone on a target, a low one
+   otherwise). Saved apart as `practice_nback_log.csv` and scored separately. It teaches the task before the
+   session, whose 2-minute baseline then lets the pupil settle.
 
 ### Load timeline (about 28 min)
 
@@ -339,6 +355,6 @@ After this document is agreed:
 5. VR mode.
 6. Saving: IndexedDB and zip download; the local server.
 7. Display characterisation and the display profile.
-8. Calibration sequence and practice in the setup.
+8. ~~Calibration sequence and practice.~~ Done: the first phases of the recording (`src/prelude.js`).
 9. ~~Scene selection and conversion script.~~ Done: four scenes, `tools/make_scenes.py`.
 10. Docs pages for running a session and for the files.

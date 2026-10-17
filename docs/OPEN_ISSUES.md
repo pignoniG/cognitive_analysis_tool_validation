@@ -85,3 +85,12 @@ Each issue says where it is, why it matters, what the presenter currently does a
 - **Proposed:** add more scenes per class if the pilot shows scene identity matters.
 - **Status:** kept.
 
+### 8. The calibration is played with a fixation point
+- **Where:** `src/prelude.js`, `src/stage.js`.
+- **Problem:** the standalone calibration presenter shows only the full-field colour. Here a small gray point with a
+  black outline (0.3°, under 0.1 deg²) is drawn as in every other condition, so the luminance of the field is not
+  exactly the nominal one: about 0.0003 of the area.
+- **Now:** kept, so that gaze is steady during the calibration as in the validation; the run file says so.
+- **Proposed:** a switch to hide it during the calibration if the pupil fit shows a difference.
+- **Status:** kept.
+

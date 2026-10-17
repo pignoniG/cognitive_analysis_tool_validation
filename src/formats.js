@@ -77,3 +77,24 @@ export function eventLogName(unixMs) {
   const d = new Date(unixMs);
   return `${d.getFullYear()}-${MONTHS[d.getMonth()]}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}_event_log.csv`;
 }
+
+/** The columns of the calibration presenter's run file (docs/calibration-tool of cwtool). */
+export const CALIBRATION_RUN_COLUMNS = ["time", "duration", "r", "g", "b", "label", "index", "source_index", "planned_start_s",
+  "planned_duration_s", "onset_unix_ms", "Y", "completed"];
+
+const round = (v, n = 4) => Math.round(v * 10 ** n) / 10 ** n;
+
+/**
+ * The calibration run file, in the calibration presenter's format: `# key: value` lines, then one row per step
+ * shown. `rows` are `{ time, duration, rgb, label, index, source_index, planned_start_s, planned_duration_s,
+ * onset_unix_ms, Y, completed }`. cwtool's *Load sequence…* reads it as it is.
+ */
+export function calibrationRunCsv(meta, rows) {
+  const lines = Object.entries(meta).map(([k, v]) => `# ${k}: ${String(v ?? "").replace(/\s+/g, " ")}\n`);
+  lines.push(csvRow(CALIBRATION_RUN_COLUMNS));
+  for (const r of rows) {
+    lines.push(csvRow([round(r.time), round(r.duration), r.rgb[0], r.rgb[1], r.rgb[2], r.label, r.index, r.source_index,
+      round(r.planned_start_s), round(r.planned_duration_s), r.onset_unix_ms.toFixed(3), r.Y.toFixed(5), r.completed]));
+  }
+  return lines.join("");
+}

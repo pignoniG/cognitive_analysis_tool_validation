@@ -45,8 +45,12 @@ audio and takes the participant's responses.
 
 ### The session
 
-9. **Start session.** The session starts on the next frame with the baseline. Nothing but the stimulus is drawn in
-   the stimulus window from then on.
+9. **Start session.** The recording starts on the next frame. With the two boxes at the top ticked, it begins with
+   the 5-minute **calibration** (the participant only looks at the fixation point while the field changes colour),
+   then the 4-minute **n-back practice** (each level once, with a high tone for a hit and a low one for a false
+   alarm), then the session proper, which starts with its 2-minute baseline. Untick either box to leave it out; the
+   timeline shows them in yellow and gray. Nothing but the stimulus is drawn in the stimulus window from then on.
+   Tell the participant before starting that the first part is a colour sequence to watch, with nothing to do.
 10. **Responses** go to the stimulus window, so it must keep the focus: Space, Enter, a presentation clicker (Page
     Up/Down, the arrow keys, B, .) or any mouse button. On a one-computer set-up, do not click the control page
     during a block: the participant's presses would go there instead.
@@ -101,7 +105,9 @@ Each session writes `sessions/<participant>_screen_<date>_<time>/`:
 | File | Content |
 |---|---|
 | `<date>_event_log.csv` | the load phases in cwtool's event_log format: copy it into the recording folder |
-| `visual_log.csv` | one row per visual step shown, with its colours, target size, scene, and the nominal luminance of the gaze circle and of the whole display |
+| `calibration_run_*.csv` | the calibration as played, in the calibration presenter's run format (cwtool's *Load sequence…* reads it, and `run_start_unix` finds the recording time from it) |
+| `practice_nback_log.csv` | the practice, in the n-back format (not scored with the session) |
+| `visual_log.csv` | one row per visual step shown (calibration and practice steps included, as segment 0), with its colours, target size, scene, and the nominal luminance of the gaze circle and of the whole display |
 | `nback_log.csv` | one row per digit heard: block, level, digit, target or lure, onset, response, reaction time, outcome, interrupted |
 | `session.json` | participant, seed, display geometry, frame statistics, pauses, the voice and the audio latencies, the n-back scores, notes |
 

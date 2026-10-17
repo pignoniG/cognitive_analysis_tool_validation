@@ -1,10 +1,10 @@
 // Session preview: what a participant ID generates (load phases, visual timeline, n-back blocks), drawn into the
 // control page. `makePlan` builds the plan the stimulus window runs; `renderPreview` draws it.
 
-import { SESSION, NBACK, VISUAL } from "./config.js";
-import { loadTimeline, totalDuration } from "./load.js";
-import { visualTimeline } from "./visual.js";
-import { nbackBlock } from "./nback.js";
+import { VISUAL } from "./config.js";
+import { totalDuration } from "./load.js";
+
+export { makePlan } from "./plan.js";
 
 const $ = (s) => document.querySelector(s);
 const SVG = "http://www.w3.org/2000/svg";
@@ -12,10 +12,10 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 
 const TYPE_NAMES = {
   constant: "Constant", steps: "Gray steps", target_luminance: "Target luminance", target_size: "Target size",
-  colour: "Equal-luminance colour", scenes: "Natural scenes",
+  colour: "Equal-luminance colour", scenes: "Natural scenes", calibration: "Calibration", practice: "Practice",
 };
 const TYPE_COLOURS = {
-  constant: "#9aa1b2", steps: "#E6643B", target_luminance: "#96D35F", target_size: "#3d8b6e", colour: "#7b61c9", scenes: "#2f7fb8",
+  constant: "#9aa1b2", steps: "#E6643B", target_luminance: "#96D35F", target_size: "#3d8b6e", colour: "#7b61c9", scenes: "#2f7fb8", calibration: "#c9a227", practice: "#8a8f9e",
 };
 const STATE_VAR = { rest: "--rest", "0-back": "--l0", "1-back": "--l1", "2-back": "--l2", "3-back": "--l3" };
 const rgb = (c) => `rgb(${c.join(",")})`;
@@ -29,20 +29,14 @@ function el(tag, attrs = {}, parent) {
 }
 const tip = (node, text) => { el("title", {}, node).textContent = text; return node; };
 
-/** Everything a participant ID generates, for a display whose largest whole target is `maxDiameter` (°). */
-export function makePlan(participant, maxDiameter = Infinity) {
-  const phases = loadTimeline(participant);
-  const visual = visualTimeline(participant, phases, { maxDiameter });
-  const items = SESSION.block / NBACK.soa;
-  const blocks = phases.filter((p) => p.kind === "block").map((p) => ({ ...p, ...nbackBlock(participant, p.block, p.level, items) }));
-  return { participant, maxDiameter: Number.isFinite(maxDiameter) ? maxDiameter : null, phases, visual, blocks };
-}
-
 /** A one-line summary of a plan. */
 export function describePlan(plan) {
-  const { phases, visual, maxDiameter } = plan;
+  const { phases, visual, maxDiameter, pre } = plan;
   const dropped = VISUAL.target.sizes.filter((s) => maxDiameter !== null && s > maxDiameter);
-  return `${mmss(totalDuration(phases))} min, ${visual.segments.length} visual segments, ${visual.steps.length} steps ` +
+  const parts = [pre.calibration && "calibration", pre.practice && "practice"].filter(Boolean);
+  const session = totalDuration(phases) - pre.duration;
+  return `${mmss(totalDuration(phases))} min` + (parts.length ? ` (${parts.join(" and ")} ${mmss(pre.duration)}, then the session ${mmss(session)})` : "") +
+    `, ${visual.segments.length} visual segments, ${visual.segments.reduce((n, s) => n + s.steps.length, 0)} steps ` +
     `(generator attempt ${visual.attempt + 1}, largest deviation ${Math.round(visual.balance.cost * 100)} %).` +
     (dropped.length ? ` Sizes ${dropped.join("°, ")}° do not fit and are left out.` : "");
 }
@@ -78,6 +72,10 @@ function drawTimeline(phases, visual, onStep) {
         "font-weight": 600, fill: p.level === 0 ? "#1c2030" : "#fff" }, svg);
       t.textContent = p.label;
     }
+    if (p.kind === "calibration") {
+      const t = el("text", { x: (x(p.start) + x(p.start + p.duration)) / 2, y: 35, "text-anchor": "middle", "font-size": 11, "font-weight": 600, fill: v("--muted") }, svg);
+      t.textContent = "Calibration";
+    }
   }
 
   const defs = el("defs", {}, svg);
@@ -85,6 +83,12 @@ function drawTimeline(phases, visual, onStep) {
   el("rect", { width: 6, height: 6, fill: "#5b7f9e" }, pat);
   el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: "#c9d8e6", "stroke-width": 3 }, pat);
 
+  for (const type of ["calibration", "practice"]) {
+    const own = (visual.pre ?? []).filter((st) => st.type === type);
+    if (!own.length) continue;
+    const a = own[0].start, b = own.at(-1).start + own.at(-1).duration;
+    tip(el("rect", { x: x(a), y: 52, width: x(b) - x(a) - 0.5, height: 18, fill: TYPE_COLOURS[type] }, svg), `${TYPE_NAMES[type]}: ${mmss(a)}, ${(b - a).toFixed(0)} s`);
+  }
   for (const s of visual.segments) {
     tip(el("rect", { x: x(s.start), y: 52, width: x(s.start + s.duration) - x(s.start) - 0.5, height: 18, fill: TYPE_COLOURS[s.type] }, svg),
       `${s.index}. ${TYPE_NAMES[s.type]}${s.variant ? ` (${s.variant})` : ""}: ${mmss(s.start)}, ${s.duration.toFixed(1)} s`);

@@ -22,20 +22,24 @@ export const RESPONSE_KEYS = new Set([" ", "Enter", "PageDown", "PageUp", "Arrow
  * instruction and ends with the start cue; each block plays its digits, one every `soa` seconds from its start;
  * the session ends with the end phrase.
  */
+/** The key of a block: the practice blocks are numbered from 1 as well, so they get their own keys. */
+export const blockKey = (b) => (b.practice ? `p${b.block}` : b.block);
+
 export function audioCues(plan, cfg = NBACK) {
   const cues = [];
-  const blocks = new Map(plan.blocks.map((b) => [b.block, b]));
+  const blocks = new Map([...plan.blocks, ...(plan.practiceBlocks ?? [])].map((b) => [blockKey(b), b]));
   for (const p of plan.phases) {
     const end = p.start + p.duration;
-    if (p.kind === "baseline" || p.kind === "rest" || p.kind === "final") cues.push({ e: p.start + CUE_TIMES.phrase, id: "rest", kind: "phrase", phase: p.label });
-    if (p.kind === "instruction") {
-      const b = blocks.get(p.block);
-      cues.push({ e: p.start + CUE_TIMES.phrase, id: p.level === 0 ? `back_0_${b.targetDigit}` : `back_${p.level}`, kind: "phrase", phase: p.label, block: p.block });
-      cues.push({ e: end + CUE_TIMES.start, id: "start", kind: "phrase", phase: p.label, block: p.block });
+    const key = blockKey(p);
+    if (["baseline", "rest", "final", "calibration"].includes(p.kind)) cues.push({ e: p.start + CUE_TIMES.phrase, id: "rest", kind: "phrase", phase: p.label });
+    if (p.kind === "instruction" || p.kind === "practice_instruction") {
+      const b = blocks.get(key);
+      cues.push({ e: p.start + CUE_TIMES.phrase, id: p.level === 0 ? `back_0_${b.targetDigit}` : `back_${p.level}`, kind: "phrase", phase: p.label, block: key });
+      cues.push({ e: end + CUE_TIMES.start, id: "start", kind: "phrase", phase: p.label, block: key });
     }
-    if (p.kind === "block") {
-      blocks.get(p.block).items.forEach((it, k) =>
-        cues.push({ e: p.start + k * cfg.soa, id: `digit_${it.digit}`, kind: "digit", phase: p.label, block: p.block, item: k }));
+    if (p.kind === "block" || p.kind === "practice_block") {
+      blocks.get(key).items.forEach((it, k) =>
+        cues.push({ e: p.start + k * cfg.soa, id: `digit_${it.digit}`, kind: "digit", phase: p.label, block: key, item: k }));
     }
     if (p.kind === "final") cues.push({ e: end + CUE_TIMES.end, id: "end", kind: "phrase", phase: p.label });
   }
@@ -48,19 +52,23 @@ export class TaskRun {
    * rows; `onScore(blockScore)` gets each block's scores when its last window closes; `unix(perfMs)` converts
    * times for the log.
    */
-  constructor(plan, { audio, sink, file = "nback_log.csv", onScore = () => {}, unix = (t) => performance.timeOrigin + t, lookahead = 1, cfg = NBACK }) {
-    Object.assign(this, { audio, sink, file, onScore, unix, lookahead, cfg });
+  constructor(plan, { audio, sink, file = "nback_log.csv", practiceFile = "practice_nback_log.csv", onScore = () => {},
+    unix = (t) => performance.timeOrigin + t, lookahead = 1, cfg = NBACK }) {
+    Object.assign(this, { audio, sink, file, practiceFile, onScore, unix, lookahead, cfg });
+    const all = [...plan.blocks, ...(plan.practiceBlocks ?? [])];
     this.cues = audioCues(plan, cfg);
     this.next = 0;                         // first cue not yet scheduled
-    this.blocks = new Map(plan.blocks.map((b) => [b.block, {
-      block: b.block, n: b.level, targetDigit: b.targetDigit, scored: false,
+    this.blocks = new Map(all.map((b) => [blockKey(b), {
+      block: b.block, n: b.level, targetDigit: b.targetDigit, scored: false, practice: !!b.practice,
       items: b.items.map((it) => ({ ...it, onsetPerf: null, windowEnd: null, responsePerf: null, extra: 0, interrupted: false, written: false })),
     }]));
     this.scheduled = [];                   // cues with a pending or playing sound: { cue, handle }
     this.stray = 0;                        // presses outside any item's window
     this.late = 0;                         // cues that could only be played late
-    this.scores = [];
+    this.scores = [];                      // the session's blocks; the practice's are in `practiceScores`
+    this.practiceScores = [];
     sink.append(file, csvRow(NBACK_LOG_HEADER));
+    if (plan.practiceBlocks?.length) sink.append(practiceFile, csvRow(NBACK_LOG_HEADER));
   }
 
   /** Each frame: schedule the cues due within the look-ahead, and close the windows that have ended. `t` is the
@@ -87,7 +95,11 @@ export class TaskRun {
     for (const b of this.blocks.values()) {
       for (const it of b.items) {
         if (it.onsetPerf !== null && !it.written && timeStamp >= it.onsetPerf && timeStamp < it.windowEnd) {
-          if (it.responsePerf === null) { it.responsePerf = timeStamp; return "response"; }
+          if (it.responsePerf === null) {
+            it.responsePerf = timeStamp;
+            if (b.practice) this.audio.feedback?.(it.target);      // practice only: a high tone for a hit, a low one for a false alarm
+            return "response";
+          }
           it.extra++;
           return "extra";
         }
@@ -138,7 +150,7 @@ export class TaskRun {
         if (it.onsetPerf === null) { open = true; return; }
         if (it.windowEnd > now) { open = true; return; }
         const o = outcome(it.target, it.responsePerf !== null);
-        this.sink.append(this.file, nbackLogRow(b.block, b.n, k + 1, {
+        this.sink.append(b.practice ? this.practiceFile : this.file, nbackLogRow(b.block, b.n, k + 1, {
           ...it, onsetMs: this.unix(it.onsetPerf), responseMs: it.responsePerf === null ? null : this.unix(it.responsePerf),
         }, b.targetDigit, o));
         it.written = true;
@@ -149,8 +161,8 @@ export class TaskRun {
         const counted = played.filter((it) => !it.interrupted);
         const s = { block: b.block, n: b.n, items: played.length, interrupted: played.length - counted.length,
           ...score(counted.map((it) => ({ target: it.target, rt: it.responsePerf === null ? null : it.responsePerf - it.onsetPerf }))) };
-        this.scores.push(s);
-        this.onScore(s);
+        (b.practice ? this.practiceScores : this.scores).push(s);
+        this.onScore({ ...s, practice: b.practice });
       }
     }
   }

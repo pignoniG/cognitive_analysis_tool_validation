@@ -57,6 +57,19 @@ export class AudioCues {
     return { source, id, onsetPerf: this.toPerf(when), late: when > this.toContext(perfMs) + 0.001, duration: buffer.duration };
   }
 
+  /** The practice's feedback: a short high tone for a hit, a low one for a false alarm, now. */
+  feedback(hit) {
+    if (!this.running) return;
+    const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), t = this.ctx.currentTime + 0.005;
+    osc.frequency.value = hit ? 880 : 220;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.25, t + 0.01);
+    gain.gain.linearRampToValueAtTime(0, t + (hit ? 0.12 : 0.2));
+    osc.connect(gain).connect(this.ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.25);
+  }
+
   stop(handle) { try { handle.source.stop(); } catch { /* already ended */ } this.sources.delete(handle.source); }
   stopAll() { for (const s of this.sources) { try { s.stop(); } catch { /* ended */ } } this.sources.clear(); }
 
