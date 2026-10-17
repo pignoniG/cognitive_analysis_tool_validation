@@ -40,8 +40,8 @@ audio and takes the participant's responses.
    The click also lets the window play sound (browsers allow audio only after a click or a key press in the page):
    the *Audio* line should read *ready*.
 8. **Check the display (optional).** Click any step in the timeline to show it in the stimulus window, for example
-   a target-size step, to measure the disc with a ruler. A 16° target at 55 cm should measure 2 × 55 × tan 8° =
-   15.5 cm across.
+   a target-size step, to measure the disc with a ruler. A 16° target at 100 cm should measure 2 × 100 × tan 8° =
+   28.1 cm across.
 
 ### The session
 

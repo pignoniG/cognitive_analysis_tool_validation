@@ -125,15 +125,28 @@ equal.
 
 ### 5. Natural scenes
 
-360° panoramas from Poly Haven (CC0), about 20, converted once to 8-bit equirectangular images with a fixed exposure
-each. They are chosen so their mean luminance spans night, indoor, overcast and bright snow or beach. A segment shows
-four scenes of about 7.5 s each.
+Four scenes from Poly Haven (CC0, 360° HDRIs), chosen to span the luminance range: a park at night
+(`pond_bridge_night`), an empty warehouse (`empty_warehouse_01`), an overcast square (`potsdamer_platz`) and a sunny
+meadow (`noon_grass`). `tools/make_scenes.py` converts them once to two 8-bit sRGB JPEGs each:
 
-- **On the monitor:** a perspective view of the panorama in its chosen direction, with the field of view matching
-  the monitor's angular size, so both campaigns see the same content.
-- **In VR:** the panorama is fixed in the world. At the start of each scene it is turned so that its chosen
-  direction is in front of the participant's head, then it stays put. The fixation point stays straight ahead, locked
-  to the head. Head movements therefore change the view, and the Varjo capture records what was seen.
+- **For the monitor, a flat crop.** 90° × 60° around the scene's view direction, cut from the 16k HDR at its own
+  resolution (5215 × 3011 pixels, about 45 per degree). It is drawn flat, one unit ahead of the fixed camera, at its
+  true angular size. A 55-inch 4K screen at 100 cm subtends 62° × 37.5° and shows 58 pixels per degree, so the crop is
+  nearly 1:1; the crop covers any distance from 62 cm out. (A 4k panorama on a sphere was tried first: 11 pixels per
+  degree, so the image was 4 to 5 times upscaled and soft.)
+- **For the headset, an 8192 × 4096 equirectangular panorama** (23 pixels per degree, about 180 MB of GPU memory each
+  with mipmaps; a 16k panorama would be 700 MB each). It is fixed in the world: at the start of each scene it is
+  turned so that its view direction is in front of the participant's head, then it stays put. The fixation point
+  stays straight ahead, locked to the head, so head movements change the view and the Varjo capture records what was
+  seen.
+
+The HDRs are in arbitrary relative units, so each image gets **one fixed exposure**, chosen so that its mean displayed
+luminance (linear Y, after clipping) is 0.01, 0.08, 0.20 and 0.35: a factor of 35 whatever the photographer's
+exposure was. The headset's panorama is exposed on its whole sphere (it shows any part of it), the monitor's crop on
+the crop itself (it shows only that), so each campaign has the same spread. There is no tone mapping: the sun, lamps
+and bright sky clip to white (41 % of the meadow crop, nearly all sky; 12 % of the overcast one). Exposures, means and
+clipped fractions are in `assets/scenes/manifest.json` with the credits, and `session.json` copies them. A segment
+shows four scenes of about 8 s each, drawn from a seeded shuffled deck of the four.
 
 This is the realistic case. The scene is non-uniform, but the gaze is held at the centre.
 
@@ -327,5 +340,5 @@ After this document is agreed:
 6. Saving: IndexedDB and zip download; the local server.
 7. Display characterisation and the display profile.
 8. Calibration sequence and practice in the setup.
-9. Scene selection and conversion script.
+9. ~~Scene selection and conversion script.~~ Done: four scenes, `tools/make_scenes.py`.
 10. Docs pages for running a session and for the files.

@@ -10,6 +10,7 @@ import { SessionRun } from "./session.js";
 import { Sink, serverAvailable } from "./sink.js";
 import { eventLogName, sessionFolder } from "./formats.js";
 import { AudioCues } from "./audio.js";
+import { loadScenes, sceneInfo } from "./scenes.js";
 import { TaskRun, RESPONSE_KEYS } from "./task.js";
 
 export const IDLE = { field: [VISUAL.constant.level, VISUAL.constant.level, VISUAL.constant.level], target: null, scene: null };
@@ -22,7 +23,7 @@ export class Presenter {
    */
   constructor({ THREE, renderer, mode, emit, display, headYaw = () => 0 }) {
     Object.assign(this, { mode, emit, display, headYaw });
-    this.stage = createStage(THREE, renderer);
+    this.stage = createStage(THREE, renderer, { flat: mode === "screen" });
     this.stage.show(IDLE);
     this.audio = new AudioCues();
     this.audioLanguage = null;
@@ -36,6 +37,9 @@ export class Presenter {
     this.notes = [];
     this.lastStatus = 0;
     this.serverP = serverAvailable();
+    this.scenes = null;            // { manifest, ids } once the panoramas are loaded
+    this.scenesError = null;
+    this.scenesP = null;
   }
 
   /** A session is under way (running or paused). */
@@ -49,6 +53,18 @@ export class Presenter {
     this.task = null;
     this.notes = [];
     this.loadAudio(config.language);
+    this.loadScenes();
+  }
+
+  /** The panoramas, once (placeholders are drawn if they cannot be loaded, and the control page is told). */
+  loadScenes() {
+    this.scenesP ??= loadScenes(VISUAL.scenes.ids, { flat: this.mode === "screen" }).then(({ manifest, scenes }) => {
+      this.stage.setScenes(scenes);
+      this.scenes = { manifest, ids: VISUAL.scenes.ids };
+    }, (e) => { this.scenesError = `could not load the natural scenes: ${e.message}`; }).then(() => {
+      this.emit({ type: "scenes", scenes: { loaded: !!this.scenes, error: this.scenesError, count: this.scenes?.ids.length ?? 0 } });
+    });
+    return this.scenesP;
   }
 
   async loadAudio(language) {
@@ -80,6 +96,7 @@ export class Presenter {
 
   async start() {
     if (this.run || !this.plan) return;
+    await this.loadScenes();
     const now = Date.now();
     const folder = sessionFolder(this.config.participant, this.mode, now);
     this.files = { events: eventLogName(now), visual: "visual_log.csv" };
@@ -139,7 +156,8 @@ export class Presenter {
       generator_attempt: plan.visual.attempt, balance_max_deviation: plan.visual.balance.cost,
       load_order: plan.phases.filter((p) => p.kind === "block").map((p) => p.level),
       display: { ...this.display(), largest_target_planned_deg: plan.maxDiameter, gaze_circle_radius_deg: GAZE_RADIUS },
-      luminance: "nominal sRGB (no display profile)",
+      luminance: "nominal sRGB (no display profile); natural scenes: not computed",
+      scenes: this.scenes ? sceneInfo(this.scenes.manifest, this.scenes.ids) : { error: this.scenesError ?? "not loaded" },
       audio: { ...this.audio.info(), language: config.language, onsets: "expected time the sound leaves the output (Web Audio output timestamp)" },
       nback: task ? { scores: task.scores, stray_presses: task.stray, late_cues: task.late,
         responses: this.mode === "vr" ? "controller trigger (select); keys as on the monitor" : [...RESPONSE_KEYS, "any mouse button"] } : null,

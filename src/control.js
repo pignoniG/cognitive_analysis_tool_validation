@@ -159,6 +159,10 @@ function handle(m) {
   else if (m.type === "vr") { vrState = m; showVR(); updateButtons(); }
   else if (m.type === "display") { display = m.display; showDisplay(); updateButtons(); }
   else if (m.type === "audio") { audio = m.audio; showAudio(); }
+  else if (m.type === "scenes") {
+    if (m.scenes.error) setLive("#live-scenes", `${m.scenes.error}; placeholders are drawn`, true);
+    else setLive("#live-scenes", m.scenes.loaded ? `${m.scenes.count} panoramas loaded` : "loading…");
+  }
   else if (m.type === "score") { scores.push(m.score); showScores(); }
   else if (m.type === "started") {
     state = "running";

@@ -101,8 +101,8 @@ td.warn { color: var(--danger); font-weight: 600; }
       <label><input type="radio" name="mode" value="vr"><span>Headset (VR)</span></label>
     </div>
     <label>Participant ID (seed) <input type="text" id="participant" value="P01" autocomplete="off"></label>
-    <label>Screen height (cm) <input type="number" id="screen-h" value="33.6" min="1" step="0.1"></label>
-    <label>Viewing distance (cm) <input type="number" id="distance" value="55" min="1" step="1"></label>
+    <label>Screen height (cm) <input type="number" id="screen-h" value="68.5" min="1" step="0.1"></label>
+    <label>Viewing distance (cm) <input type="number" id="distance" value="100" min="1" step="1"></label>
     <label>Largest whole target <input type="text" id="max-d" readonly tabindex="-1"></label>
     <label>Language <select id="language"><option value="it">Italiano</option><option value="en">English</option></select></label>
     <button id="btn-plan">Download plan (JSON)</button>
@@ -125,6 +125,7 @@ td.warn { color: var(--danger); font-weight: 600; }
     <dt>Stimulus window</dt><dd id="live-window">not open</dd>
     <dt>Saving</dt><dd id="live-saving">checking…</dd>
     <dt>Audio</dt><dd id="live-audio">—</dd>
+    <dt>Scenes</dt><dd id="live-scenes">—</dd>
     <dt>Load</dt><dd id="live-phase">—</dd>
     <dt>Visual</dt><dd id="live-visual">—</dd>
     <dt>Frames</dt><dd id="live-frames">—</dd>

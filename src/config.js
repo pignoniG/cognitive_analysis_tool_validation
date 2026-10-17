@@ -39,7 +39,8 @@ export const VISUAL = {
     sizes: [4, 8, 16, 24, 32],
   },
   colour: { duration: 6, sets: ["dim", "bright"] },
-  scenes: { duration: 7.5 },
+  // the panoramas (assets/scenes/manifest.json): a night park, a warehouse, an overcast square, a sunny meadow
+  scenes: { duration: 7.5, ids: ["night", "indoor", "overcast", "bright"] },
 };
 
 export const FIXATION = { diameter: 0.3, outline: 0.08, fill: [128, 128, 128], stroke: [0, 0, 0] };

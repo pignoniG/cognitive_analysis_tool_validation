@@ -2,8 +2,10 @@
 //
 // No shading and no tone mapping, so every pixel shows the requested sRGB value (as in the calibration presenter).
 // Head-locked parts hang from the camera: the uniform field (a sphere around the eye), the target disc and the
-// fixation point, both one unit in front of the eye, so a disc of angular diameter θ has radius tan(θ/2). The
-// panorama of a natural scene is in the world, turned so its view direction is ahead when the scene starts.
+// fixation point, both one unit in front of the eye, so a disc of angular diameter θ has radius tan(θ/2). In the
+// headset a natural scene is a panorama in the world, turned so its view direction is ahead when the scene starts. On
+// the monitor (`flat`) it is a rectilinear crop of the panorama, a flat picture one unit ahead of the fixed camera,
+// sized by its field of view: the same pixels per degree as the source, and no sphere to resample.
 
 import { FIXATION } from "./config.js";
 import { rad } from "./geometry.js";
@@ -16,7 +18,10 @@ export function configureRenderer(THREE, renderer) {
   renderer.sortObjects = true;
 }
 
-export function createStage(THREE, renderer, { scenes = {} } = {}) {
+// The sphere is mirrored so that the image centre faces -x; a quarter turn brings it ahead (-z).
+const PANO_CENTRE = -Math.PI / 2;
+
+export function createStage(THREE, renderer, { scenes = {}, flat = false } = {}) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 200);
   scene.add(camera);
@@ -32,6 +37,11 @@ export function createStage(THREE, renderer, { scenes = {} } = {}) {
   const panoMat = material();
   const pano = layer(new THREE.Mesh(panoGeo, panoMat), 1, scene);
   pano.visible = false;
+
+  const viewMat = material();
+  const view = layer(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), viewMat), 1, camera);
+  view.position.z = -1;
+  view.visible = false;
 
   const targetMat = material();
   const target = layer(new THREE.Mesh(new THREE.CircleGeometry(1, 256), targetMat), 2, camera);
@@ -50,8 +60,11 @@ export function createStage(THREE, renderer, { scenes = {} } = {}) {
   const textureFor = (id) => {
     if (!textures.has(id)) {
       const t = new THREE.Texture(scenes[id]?.image ?? placeholderPanorama(id));
+      if (flat) t.generateMipmaps = false, t.minFilter = THREE.LinearFilter;   // shown at about 1:1
       t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = Math.min(8, renderer.capabilities?.getMaxAnisotropy?.() ?? 1);
       t.needsUpdate = true;
+      renderer.initTexture?.(t);               // uploaded now, not in the frame the scene appears in
       textures.set(id, t);
     }
     return textures.get(id);
@@ -60,17 +73,38 @@ export function createStage(THREE, renderer, { scenes = {} } = {}) {
   let current = null;
   return {
     scene, camera,
+    /** The panoramas to use, `{ id: { image, yaw } }` (`yaw`: degrees from the image centre to the view direction). */
+    setScenes(loaded) {
+      for (const t of textures.values()) t.dispose();
+      textures.clear();
+      for (const id of Object.keys(scenes)) delete scenes[id];
+      Object.assign(scenes, loaded);
+      for (const id of Object.keys(loaded)) textureFor(id);
+      const shown = current;                     // a scene on show was a placeholder: draw it again
+      current = null;
+      if (shown?.scene) this.show(shown);
+    },
     /** Show `step`. `headYaw` (radians) turns a panorama so its view direction is straight ahead. */
     show(step, { headYaw = 0 } = {}) {
       if (step.scene) {
         if (current?.scene !== step.scene) {
-          panoMat.map = textureFor(step.scene);
-          panoMat.needsUpdate = true;
-          pano.rotation.y = headYaw + rad(scenes[step.scene]?.yaw ?? 0);
+          const sc = scenes[step.scene];
+          if (flat) {
+            viewMat.map = textureFor(step.scene);
+            viewMat.needsUpdate = true;
+            const [w, h] = sc?.fov ?? [90, 60];
+            view.scale.set(2 * Math.tan(rad(w / 2)), 2 * Math.tan(rad(h / 2)), 1);
+          } else {
+            panoMat.map = textureFor(step.scene);
+            panoMat.needsUpdate = true;
+            pano.rotation.y = headYaw + PANO_CENTRE + rad(sc?.yaw ?? 0);
+          }
         }
-        pano.visible = true;
+        pano.visible = !flat;
+        view.visible = flat;
         field.visible = false;
       } else {
+        view.visible = false;
         setColour(fieldMat, step.field);
         renderer.setClearColor(fieldMat.color);
         field.visible = true;

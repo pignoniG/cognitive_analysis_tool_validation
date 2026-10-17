@@ -51,6 +51,7 @@ python -m unittest discover tests      # the local server
 |---|---|
 | `index.html`, `stimulus.html`, `src/` | the control page, the stimulus window and their ES modules: seeding, timelines, n-back, the session engine, the three.js stage, file formats, saving |
 | `server.py` | optional local server that saves sessions to disk |
+| `assets/scenes/`, `tools/make_scenes.py` | the four natural scenes (CC0): an 8k panorama for the headset and a 16k-resolution crop for the monitor each, a manifest of credits and exposures, and the script that converts Poly Haven's HDRs |
 | `assets/audio/`, `tools/make_audio.py` | the n-back's clips (WAV, with a manifest per language) and the script that makes them |
 | `vendor/` | three.js r186, reduced to the classes used |
 | `docs/` | design, open issues; built with mkdocs like cwtool's docs |

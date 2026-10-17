@@ -1,0 +1,143 @@
+{
+ "generated": "2026-10-16",
+ "tool": "tools/make_scenes.py",
+ "note": "8-bit sRGB images from Poly Haven HDRIs (CC0): an 8k equirectangular panorama for the headset and a 16k-resolution crop for the monitor; one fixed exposure per scene, hard clip at white, no tone mapping",
+ "scenes": [
+  {
+   "id": "night",
+   "file": "night.jpg",
+   "label": "Pond Bridge Night",
+   "yaw": 0,
+   "size": [
+    8192,
+    4096
+   ],
+   "view": {
+    "file": "night_view.jpg",
+    "fov_deg": [
+     90,
+     60
+    ],
+    "size": [
+     5215,
+     3011
+    ],
+    "gain": 0.041119,
+    "ev": -4.604,
+    "pixels_per_degree": 45.5,
+    "mean_linear_y": 0.0099,
+    "clipped_fraction": 0.0001
+   },
+   "source": "https://polyhaven.com/a/pond_bridge_night",
+   "author": "Greg Zaal",
+   "licence": "CC0",
+   "gain": 0.014185,
+   "ev": -6.14,
+   "mean_linear_y": 0.01,
+   "clipped_fraction": 0.0,
+   "headset_view_mean_linear_y": 0.0096
+  },
+  {
+   "id": "indoor",
+   "file": "indoor.jpg",
+   "label": "Empty Warehouse 01",
+   "yaw": 0,
+   "size": [
+    8192,
+    4096
+   ],
+   "view": {
+    "file": "indoor_view.jpg",
+    "fov_deg": [
+     90,
+     60
+    ],
+    "size": [
+     5215,
+     3011
+    ],
+    "gain": 0.203427,
+    "ev": -2.297,
+    "pixels_per_degree": 45.5,
+    "mean_linear_y": 0.08,
+    "clipped_fraction": 0.024
+   },
+   "source": "https://polyhaven.com/a/empty_warehouse_01",
+   "author": "Sergej Majboroda",
+   "licence": "CC0",
+   "gain": 0.257226,
+   "ev": -1.959,
+   "mean_linear_y": 0.08,
+   "clipped_fraction": 0.0096,
+   "headset_view_mean_linear_y": 0.0762
+  },
+  {
+   "id": "overcast",
+   "file": "overcast.jpg",
+   "label": "Potsdamer Platz",
+   "yaw": 0,
+   "size": [
+    8192,
+    4096
+   ],
+   "view": {
+    "file": "overcast_view.jpg",
+    "fov_deg": [
+     90,
+     60
+    ],
+    "size": [
+     5215,
+     3011
+    ],
+    "gain": 0.973327,
+    "ev": -0.039,
+    "pixels_per_degree": 45.5,
+    "mean_linear_y": 0.1998,
+    "clipped_fraction": 0.1185
+   },
+   "source": "https://polyhaven.com/a/potsdamer_platz",
+   "author": "Greg Zaal",
+   "licence": "CC0",
+   "gain": 0.359084,
+   "ev": -1.478,
+   "mean_linear_y": 0.2,
+   "clipped_fraction": 0.0051,
+   "headset_view_mean_linear_y": 0.1855
+  },
+  {
+   "id": "bright",
+   "file": "bright.jpg",
+   "label": "Noon Grass",
+   "yaw": 0,
+   "size": [
+    8192,
+    4096
+   ],
+   "view": {
+    "file": "bright_view.jpg",
+    "fov_deg": [
+     90,
+     60
+    ],
+    "size": [
+     5215,
+     3011
+    ],
+    "gain": 1.521604,
+    "ev": 0.606,
+    "pixels_per_degree": 45.5,
+    "mean_linear_y": 0.35,
+    "clipped_fraction": 0.4075
+   },
+   "source": "https://polyhaven.com/a/noon_grass",
+   "author": "Greg Zaal",
+   "licence": "CC0",
+   "gain": 1.635603,
+   "ev": 0.71,
+   "mean_linear_y": 0.35,
+   "clipped_fraction": 0.3425,
+   "headset_view_mean_linear_y": 0.3452
+  }
+ ]
+}

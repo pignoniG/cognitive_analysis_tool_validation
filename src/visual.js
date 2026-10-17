@@ -147,15 +147,12 @@ function segmentSteps(type, variant, duration, cfg, rng, decks) {
   }
 }
 
-/** Placeholder scene ids until the panoramas are chosen. */
-export const PLACEHOLDER_SCENES = Array.from({ length: 20 }, (_, i) => `scene_${String(i + 1).padStart(2, "0")}`);
-
 /**
  * The visual timeline for `seed` over the load `phases`.
  * Options: `maxDiameter` (°, the largest target the display shows whole; larger sizes are dropped) and `scenes`
- * (scene ids). Returns `{ segments, steps, attempt, balance }`; every step carries its absolute `start`.
+ * (scene ids, by default the configured panoramas). Returns `{ segments, steps, attempt, balance }`; every step carries its absolute `start`.
  */
-export function visualTimeline(seed, phases, { maxDiameter = Infinity, scenes = PLACEHOLDER_SCENES } = {}, cfg = VISUAL) {
+export function visualTimeline(seed, phases, { maxDiameter = Infinity, scenes } = {}, cfg = VISUAL) {
   const T = totalDuration(phases);
   const types = cfg.types;
   const sizes = cfg.target.sizes.filter((s) => s <= maxDiameter);
@@ -176,7 +173,7 @@ export function visualTimeline(seed, phases, { maxDiameter = Infinity, scenes = 
     level: Object.fromEntries(Object.entries(cfg.target.levels).map(([v, l]) => [v, deck(l, rng)])),
     size: deck(sizes, rng),
     colour: Object.fromEntries(cfg.colour.sets.map((v) => [v, deck(Object.keys(COLOUR_SETS[v].colours).filter((c) => c !== "gray"), rng)])),
-    scene: deck(scenes, rng),
+    scene: deck(scenes ?? cfg.scenes.ids, rng),
   };
   // the two backgrounds (and the two colour sets) alternate within each type, from a seeded start
   const variants = { target_luminance: ["dark", "bright"], target_size: ["dark", "bright"], colour: cfg.colour.sets };

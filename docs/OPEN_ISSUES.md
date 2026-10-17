@@ -62,3 +62,26 @@ Each issue says where it is, why it matters, what the presenter currently does a
 - **Proposed:** a dry session on the Varjo (a full 28 minutes, with a few pauses and a headset removal), checking
   the files against the Varjo recording.
 - **Status:** needs data.
+
+### 6. Luminance of the natural scenes is not computed
+- **Where:** `src/geometry.js` (`stepLuminance`), `visual_log.csv`, `assets/scenes/manifest.json`.
+- **Problem:** for a field or a target the nominal luminance of the gaze circle and of the whole display is
+  computed; for a panorama the columns are empty. The luminance reaching the eye depends on the direction looked
+  at (on the monitor, the one fixed view; in VR, the head's) and, in the headset, on how much of the sphere is in the
+  120° × 105° field. The manifest has each scene's whole-sphere mean, the mean of the monitor's 90° × 60° crop
+  (`view.mean_linear_y`) and of a 120° × 105° headset view at its chosen direction.
+- **Now:** `session.json` lists the scenes with exposure, mean and clipped fraction; the analysis can use those as a
+  scene-level covariate.
+- **Proposed:** compute the gaze-circle and display means per scene from the monitor's stored crop (the view is
+  fixed, so this is exact), and for VR from the head yaw logged at each scene onset.
+- **Status:** open.
+
+### 7. Only four natural scenes
+- **Where:** `src/config.js` (`VISUAL.scenes.ids`), `tools/make_scenes.py`.
+- **Problem:** one scene per luminance class (night, indoor, overcast, sunny), so scene content and luminance are
+  confounded, and each scene repeats many times per session. The meadow's sky is clipped to white (34 % of its
+  pixels), which makes its luminance a floor, not a measurement.
+- **Now:** chosen by the experimenter for a clear spread of mean luminance (0.01 to 0.35).
+- **Proposed:** add more scenes per class if the pilot shows scene identity matters.
+- **Status:** kept.
+
