@@ -1,0 +1,12 @@
+# An overlay for the UC4 server's compose project (/opt/uc4-deploy/repo), in the way that project adds its other
+# services: it mounts one more location snippet into the nginx container, which includes whatever is in
+# /etc/nginx/segment.d/. Add this file to that project's COMPOSE_FILE list (docs/deploying.md), then recreate nginx
+# once:  docker compose up -d uc4-datavis
+#
+# The path is the validation task's clone on that server; change it if the clone is elsewhere. Note: a `git pull`
+# replaces the snippet file, and a single-file mount keeps showing the old one until nginx is recreated.
+
+services:
+  uc4-datavis:
+    volumes:
+      - /home/giovanpi/cognitive_analysis_tool_validation/deploy/nginx-validation.conf:/etc/nginx/segment.d/validation.conf:ro

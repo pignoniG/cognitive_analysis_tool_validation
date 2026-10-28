@@ -1,5 +1,5 @@
 # Add the container to the network of an existing reverse proxy (nginx in Docker), so the proxy can reach it as
-# http://validation:8000 without publishing anything:
+# http://validation-task:8000 without publishing anything:
 #
 #     PROXY_NETWORK=<network> docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d --build
 #
