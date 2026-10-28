@@ -172,6 +172,7 @@ function handle(m) {
     if (m.scenes.error) setLive("#live-scenes", `${m.scenes.error}; placeholders are drawn`, true);
     else setLive("#live-scenes", m.scenes.loaded ? `${m.scenes.count} panoramas loaded` : "loading…");
   }
+  else if (m.type === "clock") showClock(m.clock);
   else if (m.type === "score") { scores.push(m.score); showScores(); }
   else if (m.type === "started") {
     state = "running";
@@ -208,6 +209,16 @@ function showAudio() {
   else if (!audio.loaded) setLive("#live-audio", `loading the ${lang} clips…`);
   else if (!audio.running) setLive("#live-audio", `${lang} (${audio.voice}) loaded; ${mode === "vr" ? "click this page or Enter VR" : "click the stimulus window or press a key in it"} to let it play sound`, true);
   else setLive("#live-audio", `${lang} (${audio.voice}), ready`);
+}
+
+/** The offset between the server's clock and this computer's, as measured (it is only recorded, never applied). */
+function showClock(c) {
+  if (!c.available) return setLive("#live-clock", c.reason.startsWith("no server") ? "not measured (no server)" : `not measured (${c.reason})`);
+  const last = c.end ?? c.start, ms = last.offset_ms, big = Math.abs(ms) > 1000;
+  setLive("#live-clock", `the server is ${Math.abs(ms) >= 1000 ? `${(Math.abs(ms) / 1000).toFixed(3)} s` : `${Math.abs(ms).toFixed(1)} ms`} ` +
+    `${ms >= 0 ? "ahead of" : "behind"} this computer (±${c.uncertainty_ms.toFixed(1)} ms), saved in the files` +
+    (c.drift_ms_per_min !== null ? `; drift ${c.drift_ms_per_min.toFixed(2)} ms/min` : "") +
+    (c.page_vs_wall_ms_max > 50 ? `; the computer's clock was stepped by ${Math.round(c.page_vs_wall_ms_max)} ms` : ""), big || c.page_vs_wall_ms_max > 50);
 }
 
 function showScores() {
@@ -350,7 +361,7 @@ for (const id of SETUP_INPUTS) {
   $(id).addEventListener("input", () => { store.set(id.slice(1), box ? ($(id).checked ? "1" : "0") : $(id).value); clearTimeout(timer); timer = setTimeout(build, 200); });
 }
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => plan && renderPreview(plan, { onStep: previewStep }));
-serverAvailable().then((ok) => setLive("#live-saving", ok ? "to disk through server.py (sessions/)" : savingMemoryText(), !ok));
+serverAvailable().then((ok) => setLive("#live-saving", ok ? "to disk through server.py" : savingMemoryText(), !ok));
 if (mode === "vr") prepareVR();
 build();
 

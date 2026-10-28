@@ -94,3 +94,24 @@ Each issue says where it is, why it matters, what the presenter currently does a
 - **Proposed:** a switch to hide it during the calibration if the pupil fit shows a difference.
 - **Status:** kept.
 
+### 9. The Docker image has not been built on a server
+- **Where:** `Dockerfile`, `docker-compose.yml`, `docker-compose.proxy.yml`, `deploy/nginx-validation.conf`.
+- **Problem:** the files were written on a machine without Docker. The server (password, served files, data folder,
+  clock endpoint) is tested, and the page was run through a stand-in proxy that strips `/validation/` as the nginx
+  snippet does. Not tested: the build, the container's user and the permissions of a mounted folder, the health
+  check, and the nginx snippet against the real nginx (its network and file names were taken from a description).
+- **Now:** documented in `docs/deploying.md`, with the commands to check each.
+- **Proposed:** build it on the server, run a short session through `https://<host>/validation/` and check the
+  files in the data folder, the *Clock* line and the headset's WebXR session over HTTPS.
+- **Status:** needs data.
+
+### 10. The clock offset covers the server and the page, not the other devices
+- **Where:** `src/clock.js`, `clock_offset.csv`.
+- **Problem:** the offset is between the server's clock and the lab computer's. The eye tracker, the headset and the
+  physiology devices each have their own clock and are matched to the computer's by other means (cwtool's sync);
+  their offsets are not measured here. The server is also only a reference: a server clock that itself drifts or is
+  wrong says nothing about the participant's data.
+- **Now:** the offset is recorded, not applied; the convention is `server = logged + offset`.
+- **Proposed:** none needed unless the server's clock becomes the reference for several machines.
+- **Status:** kept.
+

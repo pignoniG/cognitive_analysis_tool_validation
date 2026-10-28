@@ -10,6 +10,7 @@ import { SessionRun } from "./session.js";
 import { Sink, serverAvailable } from "./sink.js";
 import { eventLogName, sessionFolder } from "./formats.js";
 import { CalibrationRun } from "./calibration.js";
+import { ClockRecorder } from "./clock.js";
 import { AudioCues } from "./audio.js";
 import { loadScenes, sceneInfo } from "./scenes.js";
 import { TaskRun, RESPONSE_KEYS } from "./task.js";
@@ -96,7 +97,12 @@ export class Presenter {
   }
 
   async start() {
-    if (this.run || !this.plan) return;
+    if (this.run || this.starting || !this.plan) return;      // a second click while the first is measuring the clock
+    this.starting = true;
+    try { await this.#begin(); } finally { this.starting = false; }
+  }
+
+  async #begin() {
     await this.loadScenes();
     const now = Date.now();
     const folder = sessionFolder(this.config.participant, this.mode, now, this.plan.options.set);
@@ -110,6 +116,14 @@ export class Presenter {
         color_gamut_p3: matchMedia("(color-gamut: p3)").matches, hdr: matchMedia("(dynamic-range: high)").matches, user_agent: navigator.userAgent });
     }
     const sink = this.sink = new Sink(folder, await this.serverP);
+    // the offset between the server's clock and this computer's, before the session starts (only when there is a server)
+    this.clock = new ClockRecorder(sink);
+    this.nextClockAt = 60;
+    if (sink.server) {
+      this.files.clock = "clock_offset.csv";
+      await this.clock.measure("start", null, 8);
+    }
+    this.emit({ type: "clock", clock: this.clock.summary() });
     const task = this.task = new TaskRun(this.plan, { audio: this.audio, sink, onScore: (score) => this.emit({ type: "score", score }) });
     this.run = new SessionRun(this.plan, {
       show: (step) => this.stage.show(step, { headYaw: this.headYaw() }),
@@ -142,6 +156,10 @@ export class Presenter {
   frame(t) {
     const { run, task } = this;
     run?.frame(t);
+    if (this.clock && this.sink.server && run?.state === "running" && run.elapsed(t) >= this.nextClockAt) {   // every minute, in the background
+      this.nextClockAt += 60;
+      this.clock.measure("during", run.elapsed(t), 5).then((m) => m?.ok && this.emit({ type: "clock", clock: this.clock.summary() }));
+    }
     if (task) task.frame(t, run.elapsed(t), run.state);
     if (t - this.lastStatus > 250) {
       this.lastStatus = t;
@@ -157,6 +175,8 @@ export class Presenter {
     const { sink } = this;
     this.task.end(summary.end_unix_ms - performance.timeOrigin, summary.status === "completed");
     this.stage.show(IDLE);
+    if (sink.server) await this.clock.measure("end", summary.session_s, 8);
+    this.emit({ type: "clock", clock: this.clock.summary() });
     if (this.calibration && !this.calibration.empty) sink.write(this.files.calibration, this.calibration.csv(true));
     sink.write("session.json", JSON.stringify(this.sessionInfo({ status: summary.status, summary }), null, 1));
     const complete = await sink.flush();
@@ -181,6 +201,7 @@ export class Presenter {
       nback: task ? { scores: task.scores, stray_presses: task.stray, late_cues: task.late,
         responses: this.mode === "vr" ? "controller trigger (select); keys as on the monitor" : [...RESPONSE_KEYS, "any mouse button"] } : null,
       files: this.files,
+      clock: this.clock?.summary() ?? null,
       saving: sink.mode, server_folder: sink.server ? sink.folder : null,
       browser: navigator.userAgent,
       notes: this.notes,

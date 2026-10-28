@@ -1,0 +1,19 @@
+# The validation task on a server:   docker compose up -d --build        (docs/deploying.md)
+#
+# The sessions are kept in DATA_PATH on the host (default ./data), so they survive rebuilds, redeploys and
+# `docker compose down`. Copy .env.example to .env first.
+
+services:
+  validation:
+    build: .
+    image: validation-task
+    container_name: validation-task
+    restart: unless-stopped
+    user: "${DATA_UID:-10001}:${DATA_GID:-10001}"
+    environment:
+      VALIDATION_PASSWORD: ${VALIDATION_PASSWORD:-}
+    volumes:
+      - ${DATA_PATH:-./data}:/data
+    ports:
+      # the host's loopback only: reach it through an SSH tunnel, or a proxy running on the host
+      - "127.0.0.1:${VALIDATION_PORT:-8765}:8000"

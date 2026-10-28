@@ -11,6 +11,7 @@ import { TaskRun } from "./task.js";
 import { AudioCues } from "./audio.js";
 import { Sink, serverAvailable } from "./sink.js";
 import { sessionFolder } from "./formats.js";
+import { ClockRecorder } from "./clock.js";
 
 export class PracticeRun {
   /** `emit(message)`: `{ type: "status", status }`, `{ type: "score", score }`, `{ type: "feedback", hit }` and
@@ -48,6 +49,8 @@ export class PracticeRun {
     const audio = { play: (id, perfMs) => a.play(id, perfMs), stop: (h) => a.stop(h), stopAll: () => a.stopAll(),
       feedback: (hit) => { a.feedback(hit); this.emit({ type: "feedback", hit }); } };
     this.sink = sink;
+    this.clock = new ClockRecorder(sink);
+    if (sink.server) await this.clock.measure("start", null, 8);
     this.task = new TaskRun(plan, { audio, sink, onScore: (score) => this.emit({ type: "score", score }) });
     this.run = new SessionRun(plan, {
       show() {}, sink, files: { events: "practice_event_log.csv", visual: "practice_visual_log.csv" },
@@ -76,12 +79,13 @@ export class PracticeRun {
     cancelAnimationFrame(this.raf);
     const { sink, task } = this;
     task.end(summary.end_unix_ms - performance.timeOrigin, summary.status === "completed");
+    if (sink.server) await this.clock.measure("end", summary.session_s, 8);
     sink.write("session.json", JSON.stringify({
       app: "validation-task", app_version: APP_VERSION, part: "n-back practice", participant, language,
       levels: PRACTICE.levels, items_per_level: PRACTICE.items, soa_s: NBACK.soa,
       feedback: "a high tone on a hit, a low one on a false alarm",
       status: summary.status, scores: task.practiceScores, stray_presses: task.stray, late_cues: task.late,
-      audio: this.audio.info(), saving: sink.mode, server_folder: sink.server ? folder : null, browser: navigator.userAgent,
+      clock: this.clock.summary(), audio: this.audio.info(), saving: sink.mode, server_folder: sink.server ? folder : null, browser: navigator.userAgent,
     }, null, 1));
     const complete = await sink.flush();
     this.emit({ type: "done", summary, folder, saving: sink.mode, diskComplete: sink.server ? complete : null,

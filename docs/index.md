@@ -19,7 +19,8 @@ The same ID always gives the same session.
 |---|---|
 | [Design](design.md) | agreed; the open questions there have defaults |
 | Seeded generators (load order, visual timeline, n-back) and file formats | done, with tests |
-| Local server (`server.py`) | done, with tests |
+| Local server (`server.py`): saves sessions, password, clock offset | done, with tests |
+| Docker image and compose files for a server, with persistent data ([deploying](deploying.md)) | written; not yet built on a server |
 | Session preview (`index.html`) | done |
 | Screen presenter: control page, stimulus window, all visual conditions, timing, pause, logging ([running a session](running.md)) | done; scenes are placeholders |
 | n-back audio: Kokoro clips in Italian and English, scheduling on the audio clock, responses, scores | done; voices to be judged |
