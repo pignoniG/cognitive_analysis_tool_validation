@@ -99,7 +99,7 @@ export class Presenter {
     if (this.run || !this.plan) return;
     await this.loadScenes();
     const now = Date.now();
-    const folder = sessionFolder(this.config.participant, this.mode, now);
+    const folder = sessionFolder(this.config.participant, this.mode, now, this.plan.options.set);
     this.files = { events: eventLogName(now), visual: "visual_log.csv" };
     this.calibration = null;               // the calibration as played, for its run file
     if (this.plan.pre.calibration) {
@@ -171,13 +171,14 @@ export class Presenter {
       participant: config.participant, seed: config.participant, language: config.language,
       generator_attempt: plan.visual.attempt, balance_max_deviation: plan.visual.balance.cost,
       load_order: plan.phases.filter((p) => p.kind === "block").map((p) => p.level),
-      prelude: { calibration: plan.options.calibration, practice: plan.options.practice, duration_s: plan.pre.duration,
+      visual_set: { set: plan.options.set, label: VISUAL.sets[plan.options.set].label, types: VISUAL.sets[plan.options.set].types },
+      prelude: { calibration: plan.options.calibration, duration_s: plan.pre.duration,
         calibration_sequence: plan.pre.calibration ? "full calibration, scrambled by participant ID (cwtool.calibration.scrambled(DEFAULT, participant))" : null },
       display: { ...this.display(), largest_target_planned_deg: plan.maxDiameter, gaze_circle_radius_deg: GAZE_RADIUS },
       luminance: "nominal sRGB (no display profile); natural scenes: not computed",
       scenes: this.scenes ? sceneInfo(this.scenes.manifest, this.scenes.ids) : { error: this.scenesError ?? "not loaded" },
       audio: { ...this.audio.info(), language: config.language, onsets: "expected time the sound leaves the output (Web Audio output timestamp)" },
-      nback: task ? { scores: task.scores, practice_scores: task.practiceScores, stray_presses: task.stray, late_cues: task.late,
+      nback: task ? { scores: task.scores, stray_presses: task.stray, late_cues: task.late,
         responses: this.mode === "vr" ? "controller trigger (select); keys as on the monitor" : [...RESPONSE_KEYS, "any mouse button"] } : null,
       files: this.files,
       saving: sink.mode, server_folder: sink.server ? sink.folder : null,

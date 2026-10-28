@@ -8,6 +8,7 @@ import { angleOf } from "./geometry.js";
 import { serverAvailable } from "./sink.js";
 import { makePlan, describePlan, renderPreview, mmss, TYPE_NAMES } from "./preview.js";
 import { RESPONSE_KEYS } from "./task.js";
+import { PracticeRun } from "./practice.js";
 import { createVR, vrSupported } from "./vr.js";
 
 const $ = (s) => document.querySelector(s);
@@ -22,12 +23,19 @@ let mode = store.get("mode") === "vr" ? "vr" : "screen";         // screen (glas
 let vr = null, vrState = null;                                    // the headset side, once created
 let audio = null;                                                 // what the stimulus window reports about its audio
 const scores = [];
-const SETUP_INPUTS = ["#participant", "#screen-h", "#distance", "#language", "#calibration", "#practice"];
+const practice = new PracticeRun((m) => {
+  if (m.type === "status") showPracticeStatus(m.status);
+  else if (m.type === "score") showPracticeScore(m.score);
+  else if (m.type === "feedback") flashPractice(m.hit);
+  else if (m.type === "done") practiceDone(m);
+});
+const practiceScores = [];
+const SETUP_INPUTS = ["#participant", "#visual-set", "#screen-h", "#distance", "#language", "#calibration"];
 
 function setup() {
   return { participant: $("#participant").value.trim(), screenCm: Number($("#screen-h").value),
     distanceCm: Number($("#distance").value), language: $("#language").value, mode, appVersion: APP_VERSION,
-    calibration: $("#calibration").checked, practice: $("#practice").checked };
+    calibration: $("#calibration").checked, set: $("#visual-set").value };
 }
 
 function build() {
@@ -41,7 +49,7 @@ function build() {
   if (!c.participant) status.textContent = "Enter a participant ID.";
   else {
     try {
-      plan = makePlan(c.participant, maxDiameter, { calibration: c.calibration, practice: c.practice });
+      plan = makePlan(c.participant, maxDiameter, { calibration: c.calibration, set: c.set });
       status.textContent = describePlan(plan);
       renderPreview(plan, { onStep: previewStep });
     } catch (e) {
@@ -243,13 +251,13 @@ function finished(m) {
   updateButtons();
 }
 
-function showFiles(folder, files) {
-  for (const a of document.querySelectorAll("#files a")) URL.revokeObjectURL(a.href);
+function showFiles(folder, files, target = "#files") {
+  for (const a of document.querySelectorAll(`${target} a`)) URL.revokeObjectURL(a.href);
   const items = Object.entries(files).map(([name, text]) => {
     const href = URL.createObjectURL(new Blob([text], { type: name.endsWith(".json") ? "application/json" : "text/csv" }));
     return `<li><a href="${href}" download="${folder}__${name}">${name}</a> <span class="muted">(${(text.length / 1024).toFixed(1)} kB)</span></li>`;
   }).join("");
-  $("#files").innerHTML = `<p class="muted">Files of <b>${folder}</b> (the downloads are prefixed with the folder name):</p><ul>${items}</ul>`;
+  $(target).innerHTML = `<p class="muted">Files of <b>${folder}</b> (the downloads are prefixed with the folder name):</p><ul>${items}</ul>`;
 }
 
 /** Show one step of the plan in the stimulus window (not during a session), e.g. to check a target's size. */
@@ -283,7 +291,7 @@ function updateButtons() {
   $("#btn-pause").disabled = !active;
   $("#btn-pause").textContent = state === "paused" ? "Resume" : "Pause";
   $("#btn-abort").disabled = !active;
-  for (const id of ["#participant", "#language"]) $(id).disabled = active;
+  for (const id of ["#participant", "#language", "#visual-set", "#calibration"]) $(id).disabled = active || practice.running;
   if (mode === "screen" && stim?.closed && !active) setLive("#live-window", "closed");
 }
 
@@ -345,3 +353,70 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => plan
 serverAvailable().then((ok) => setLive("#live-saving", ok ? "to disk through server.py (sessions/)" : savingMemoryText(), !ok));
 if (mode === "vr") prepareVR();
 build();
+
+
+/* ---------- the n-back practice (a part of its own, outside the recording) ---------- */
+
+
+function showPracticeStatus(s) {
+  const label = s.phase?.replace("Practice ", "").replace("instruction", "listen") ?? "";
+  $("#practice-label").textContent = s.phase === "Practice instruction" ? "Listen…" : s.phase === "Practice end" ? "Done" : label;
+  setLive("#live-practice", `${s.phase ?? "starting…"} · ${mmss(s.phaseLeft ?? 0)} left · ${mmss(s.elapsed)} of ${mmss(s.total)}`);
+}
+
+function showPracticeScore(s) {
+  practiceScores.push(s);
+  $("#practice-scores").innerHTML = "<table><thead><tr><th>Level</th><th class=\"num\">Hits</th><th class=\"num\">False alarms</th>" +
+    "<th class=\"num\">d′</th><th class=\"num\">Median RT (ms)</th></tr></thead><tbody>" +
+    practiceScores.map((p) => `<tr><td>${p.n}-back</td><td class="num">${p.hit}/${p.hit + p.miss}</td><td class="num">${p.false_alarm}</td>` +
+      `<td class="num">${p.dprime.toFixed(2)}</td><td class="num">${p.medianRt === null ? "—" : Math.round(p.medianRt)}</td></tr>`).join("") + "</tbody></table>";
+}
+
+let flashTimer;
+function flashPractice(hit) {
+  const box = $("#practice-stage");
+  box.classList.remove("hit", "miss");
+  box.classList.add(hit ? "hit" : "miss");
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => box.classList.remove("hit", "miss"), 400);
+}
+
+function practiceButtons() {
+  const on = practice.running;
+  $("#btn-practice").disabled = on || !$("#participant").value.trim();
+  $("#btn-practice-stop").disabled = !on;
+  for (const id of ["#participant", "#language"]) $(id).disabled = on || state === "running" || state === "paused";
+}
+
+async function startPractice() {
+  if (practice.running || state === "running" || state === "paused") return;
+  const { participant, language } = setup();
+  if (!participant) return;
+  setLive("#live-practice", "loading the audio…");
+  try { await practice.prepare(language); } catch (e) { setLive("#live-practice", `could not load the audio: ${e.message}`, true); return; }
+  practiceScores.length = 0;
+  $("#practice-scores").replaceChildren();
+  $("#practice-files").replaceChildren();
+  await practice.start(participant, language);
+  practiceButtons();
+}
+
+function practiceDone(m) {
+  const stopped = m.summary.status !== "completed";
+  $("#practice-label").textContent = stopped ? "Stopped" : "Done";
+  setLive("#live-practice", `${stopped ? "stopped" : "completed"} after ${mmss(m.summary.session_s)}; ` +
+    (m.diskComplete === true ? `saved to disk: sessions/${m.folder}/` : "in the browser only: download the files below"), stopped);
+  showFiles(m.folder, m.files, "#practice-files");
+  practiceButtons();
+}
+
+$("#btn-practice").addEventListener("click", startPractice);
+$("#btn-practice-stop").addEventListener("click", () => practice.stop());
+$("#practice-stage").addEventListener("pointerdown", (e) => practice.press(e.timeStamp));
+window.addEventListener("keydown", (e) => {
+  if (!practice.running || !RESPONSE_KEYS.has(e.key)) return;
+  e.preventDefault();
+  if (!e.repeat) practice.press(e.timeStamp);
+});
+$("#participant").addEventListener("input", practiceButtons);
+practiceButtons();

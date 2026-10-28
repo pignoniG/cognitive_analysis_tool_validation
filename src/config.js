@@ -7,8 +7,8 @@ export const SESSION = {
   instruction: 10,      // spoken instruction before each block
   block: 150,           // one n-back block
   rest: 20,             // between a block and the next instruction
-  finalRest: 120,
-  levels: [0, 1, 2, 3], // n of the n-back
+  finalRest: 60,
+  levels: [1, 2, 3],    // n of the n-back (no 0-back: the rests are the low-load reference)
   rounds: 2,            // each round is one permutation of the levels
 };
 
@@ -24,11 +24,13 @@ export const CALIBRATION = {
   repeats: [73, 182],   // grays shown again, 8 s each
 };
 
-// The n-back practice: each level once, on a constant gray field, with a feedback sound on every press.
+// The n-back practice, a separate part of the page done before the recording (outside the headset): each level
+// once with a feedback sound on every press.
 export const PRACTICE = {
-  levels: [0, 1, 2, 3],
+  levels: [1, 2, 3],
   items: 20,            // per level (50 s)
   instruction: 10,
+  end: 5,               // s after the last block
   lures: 2,             // per 2- and 3-back block
 };
 
@@ -44,7 +46,15 @@ export const VISUAL = {
   segment: [24, 36],    // segment lengths, drawn uniformly, then scaled to fill the session exactly
   balanceTolerance: 0.25, // each segment type's time in each load state within ±25 % of an even split
   maxAttempts: 50,
+  // every segment type the generator can make, and the two sets a participant is given (chosen on the control page):
+  // A, solid colours: the constant field as the reference, gray steps, equal-luminance colours; B, circle size: the
+  // constant field and a fixed-luminance circle of varying diameter. Natural scenes are in both.
   types: ["constant", "steps", "target_luminance", "target_size", "colour", "scenes"],
+  sets: {
+    A: { label: "Solid colours", types: ["constant", "steps", "colour", "scenes"] },
+    B: { label: "Circle size", types: ["constant", "target_size", "scenes"] },
+  },
+  defaultSet: "A",
 
   constant: { level: 128 },
   steps: { duration: [5, 10], levels: [0, 36, 73, 109, 146, 182, 219, 255] },

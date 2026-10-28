@@ -47,7 +47,7 @@ test("a full run logs every phase and step once, back to back", () => {
   // each row starts where the previous ended, and durations match the plan within a frame
   for (const r of [ev, vis]) for (let i = 2; i < r.length; i++) assert.equal(r[i][4], r[i - 1][5]);
   ev.slice(1).forEach((r, i) => assert.ok(Math.abs(Number(r[3]) - plan.phases[i].duration) <= 1 / 60 + 1e-3, r.join()));
-  assert.ok(Math.abs(run.summary.session_s - 1660) < 0.05);
+  assert.ok(Math.abs(run.summary.session_s - 1240) < 0.05);
   assert.equal(run.summary.frames.dropped, 0);
   // nominal luminance columns are filled for fields, empty for scenes
   const yg = VISUAL_LOG_HEADER.indexOf("Y_gaze");
@@ -68,7 +68,7 @@ test("pausing freezes the session and splits the rows", () => {
   assert.equal(ev[pauseAt - 1][0], ev[pauseAt + 1][0]);          // the same phase continues after the pause
   assert.equal(ev.length, plan.phases.length + 2);
   // the session still lasts its planned time, without the pause
-  assert.ok(Math.abs(run.summary.session_s - 1660) < 0.05);
+  assert.ok(Math.abs(run.summary.session_s - 1240) < 0.05);
   const vis = rows(sink, FILES.visual).slice(1);
   const ch = VISUAL_LOG_HEADER.indexOf("change");
   assert.equal(vis.filter((r) => r[ch] === "resume").length, 1);

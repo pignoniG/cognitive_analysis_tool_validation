@@ -60,7 +60,14 @@ input:disabled, select:disabled { opacity: .6; }
 .bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; margin-top: 14px; }
 .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s linear; }
 #files ul { margin: 8px 0 0; padding-left: 20px; }
-#files:empty, #scores:empty { display: none; }
+#files:empty, #scores:empty, #practice-files:empty, #practice-scores:empty { display: none; }
+#practice-files ul { margin: 8px 0 0; padding-left: 20px; }
+#practice-scores { margin-top: 14px; }
+#practice-stage { position: relative; display: grid; place-items: center; height: 150px; margin-top: 14px; border-radius: 8px; background: rgb(128, 128, 128); color: #fff; font-weight: 600; font-size: 18px; text-shadow: 0 0 3px #000; cursor: pointer; user-select: none; transition: box-shadow .12s; }
+#practice-stage i { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: rgb(128, 128, 128); box-shadow: 0 0 0 2px #000; }
+#practice-stage span { position: relative; top: -34px; }
+#practice-stage.hit { box-shadow: inset 0 0 0 8px #3f9d5b; }
+#practice-stage.miss { box-shadow: inset 0 0 0 8px #c0453a; }
 #scores { margin-top: 14px; }
 #inline iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--line); border-radius: 8px; margin-top: 14px; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
@@ -89,7 +96,7 @@ td.warn { color: var(--danger); font-weight: 600; }
   <h1>Validation Task</h1>
   <p class="lead">Set up and run a session on a monitor. The stimuli are shown in a second window on the
   participant's display; this page controls it and shows the plan the participant ID generates: the load phases,
-  the visual timeline running independently underneath, and the n-back blocks. See
+  the visual timeline running independently underneath (set A or B), and the n-back blocks. See
   <a href="docs/design.md">the design</a>.</p>
 </header>
 <main>
@@ -101,15 +108,32 @@ td.warn { color: var(--danger); font-weight: 600; }
       <label><input type="radio" name="mode" value="vr"><span>Headset (VR)</span></label>
     </div>
     <label>Participant ID (seed) <input type="text" id="participant" value="P01" autocomplete="off"></label>
+    <label title="Which visual conditions this participant gets (natural scenes are in both): A, constant, gray steps and equal-luminance colours; B, constant and a circle of varying size">Visual set
+      <select id="visual-set"><option value="A">A: solid colours</option><option value="B">B: circle size</option></select></label>
     <label>Screen height (cm) <input type="number" id="screen-h" value="68.5" min="1" step="0.1"></label>
     <label>Viewing distance (cm) <input type="number" id="distance" value="100" min="1" step="1"></label>
     <label>Largest whole target <input type="text" id="max-d" readonly tabindex="-1"></label>
     <label>Language <select id="language"><option value="it">Italiano</option><option value="en">English</option></select></label>
     <label class="check" title="The calibration presenter's full calibration sequence (about 5 min), at the start of the same recording"><input type="checkbox" id="calibration" checked> Calibration (5 min)</label>
-    <label class="check" title="Each n-back level once on a gray field, with feedback tones (4 min)"><input type="checkbox" id="practice" checked> n-back practice (4 min)</label>
     <button id="btn-plan">Download plan (JSON)</button>
   </div>
   <p id="status" class="muted" aria-live="polite"></p>
+</section>
+
+<section class="card" aria-labelledby="h-practice">
+  <h2 id="h-practice">n-back practice</h2>
+  <p class="muted">Before the recording, with the participant at this computer and headphones on, not in the headset:
+  1-, 2- and 3-back once each (about 3 minutes). A high tone answers a correct press, a low tone a press on a
+  non-target. It uses the participant ID and the language above and is saved on its own, never with a recording.
+  Responses: Space, Enter, a clicker, or a click in the gray box.</p>
+  <div class="row">
+    <button id="btn-practice">Start practice</button>
+    <button id="btn-practice-stop" class="danger" disabled>Stop</button>
+  </div>
+  <div id="practice-stage" role="img" aria-label="Practice display"><span id="practice-label">Ready</span><i></i></div>
+  <dl class="live"><dt>Practice</dt><dd id="live-practice">—</dd></dl>
+  <div class="table-scroll" id="practice-scores"></div>
+  <div id="practice-files" aria-live="polite"></div>
 </section>
 
 <section class="card" aria-labelledby="h-run">

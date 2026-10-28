@@ -32,6 +32,7 @@ export function audioCues(plan, cfg = NBACK) {
     const end = p.start + p.duration;
     const key = blockKey(p);
     if (["baseline", "rest", "final", "calibration"].includes(p.kind)) cues.push({ e: p.start + CUE_TIMES.phrase, id: "rest", kind: "phrase", phase: p.label });
+    if (p.kind === "practice_end") cues.push({ e: p.start + CUE_TIMES.phrase, id: "end", kind: "phrase", phase: p.label });
     if (p.kind === "instruction" || p.kind === "practice_instruction") {
       const b = blocks.get(key);
       cues.push({ e: p.start + CUE_TIMES.phrase, id: p.level === 0 ? `back_0_${b.targetDigit}` : `back_${p.level}`, kind: "phrase", phase: p.label, block: key });
@@ -67,7 +68,7 @@ export class TaskRun {
     this.late = 0;                         // cues that could only be played late
     this.scores = [];                      // the session's blocks; the practice's are in `practiceScores`
     this.practiceScores = [];
-    sink.append(file, csvRow(NBACK_LOG_HEADER));
+    if (plan.blocks.length) sink.append(file, csvRow(NBACK_LOG_HEADER));
     if (plan.practiceBlocks?.length) sink.append(practiceFile, csvRow(NBACK_LOG_HEADER));
   }
 

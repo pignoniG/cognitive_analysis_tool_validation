@@ -14,10 +14,10 @@ What changes from the 2021 validation (Pignoni et al., IEEE Sensors Journal):
 
 | 2021 | Now | Why |
 |---|---|---|
-| One light pattern, a full-field 0.1 Hz sinusoid | Five kinds of visual change: constant, steps, central targets, equal-luminance colour, natural scenes | each tests a different part of the 2.0 luminance model |
+| One light pattern, a full-field 0.1 Hz sinusoid | Two sets of visual changes, one per participant: A solid colours (constant, gray steps, equal-luminance colour) and B circle size (constant, targets of varying size); natural scenes in both | each tests a different part of the 2.0 luminance model, in a session short enough to wear a headset for |
 | Light changes on the same timeline as the task | The visual timeline runs independently of the load blocks | load and light are not confounded |
-| Counting and Fibonacci, spoken, unscored | Auditory n-back (0 to 3-back), button responses | graded load with accuracy and reaction time; nothing added to the visual field |
-| About 30 s to 1.5 min per task | 2.5 min per block, each level twice | long enough for HRV |
+| Counting and Fibonacci, spoken, unscored | Auditory n-back (1- to 3-back), button responses | graded load with accuracy and reaction time; nothing added to the visual field |
+| About 30 s to 1.5 min per task | 2.5 min per block, each level twice | long enough for HRV (RMSSD and heart rate) |
 | PsychoPy and a projector | One web page, on a monitor or in a headset (three.js, WebXR) | the same stimuli for VR and glasses |
 
 ## Session
@@ -31,43 +31,52 @@ session lasts at most 30 minutes, excluding setup.
 2. **Display check** (glasses: screen size and viewing distance, so sizes can be set in degrees) and, if a
    photometer is available, the **display characterisation** (see [Photometry](#photometry)).
 
-### Before the session, in the same recording (not counted in the 30 minutes)
+### Practice, before the recording (a part of the page of its own)
 
-Calibration and practice are played by the same page as the first phases of the recording, so one recording (and one
-event log) holds the calibration of the pupil model and the validation. Both are optional, on by default.
+The n-back practice is not part of the recording: it is done before the headset goes on or the participant sits at
+the monitor, at the control computer with headphones. Each level once (1-, 2-, 3-back): 10 s of spoken instruction
+and 20 items (50 s), 3 min 5 s in all, with a feedback tone on every press (a high tone on a target, a low one
+otherwise) and a flash in the gray box. It uses the participant ID and the language of the page, runs its own
+session engine and task, and saves a folder of its own (`<participant>_practice_<date>/`: `practice_nback_log.csv`,
+`practice_event_log.csv`, `session.json`), never mixed with a recording. It does not count in the session time and
+adds nothing to the time in the headset.
 
-1. **Calibration** (about 5 min): cwtool's *full calibration* sequence, ported exactly from the calibration presenter
-   (`cwtool.calibration`): 34 full-field steps of 291 s, after a 5 s gray lead-in. The 8 grays of Eckert et al.
-   (2022), longer the darker; red, green and blue at 64, 128, 191 and 255, each after its linked black step; two
-   grays repeated. The order is the presenter's "scrambled, seeded by participant" (the preset order scrambled again
-   with the participant ID, no two consecutive levels next to each other in brightness), so the same ID gives the
-   same order here, in the presenter and in `cwtool.calibration.scrambled(DEFAULT, id)`. The only spoken cue is the
-   rest phrase at the start ("keep your gaze on the point"). It is saved as `calibration_run_*.csv` in the
-   presenter's run format. It comes first, with the participant fresh and nothing else to do.
-   *Departure from the standalone presenter:* the fixation point is shown (it is in every condition of this tool), so
-   gaze is steady and the calibration and the validation are recorded the same way. It covers under 0.1 deg².
-2. **n-back practice** (4 min): each level once (0-, 1-, 2-, 3-back), 10 s of spoken instruction and 20 items
-   (50 s) each, on a constant gray field, with feedback tones on every press (a high tone on a target, a low one
-   otherwise). Saved apart as `practice_nback_log.csv` and scored separately. It teaches the task before the
-   session, whose 2-minute baseline then lets the pupil settle.
+### Before the session, in the same recording (not counted in the session's minutes)
 
-### Load timeline (about 28 min)
+The calibration is played by the same page as the first phase of the recording, so one recording (and one event
+log) holds the calibration of the pupil model and the validation. It is optional, on by default, and it needs to be
+there: the pupil adapts to the light during its long steps, and the session's 2-minute baseline follows it.
+
+**Calibration** (about 5 min): cwtool's *full calibration* sequence, ported exactly from the calibration presenter
+(`cwtool.calibration`): 34 full-field steps of 291 s, after a 5 s gray lead-in. The 8 grays of Eckert et al. (2022),
+longer the darker; red, green and blue at 64, 128, 191 and 255, each after its linked black step; two grays repeated.
+The order is the presenter's "scrambled, seeded by participant" (the preset order scrambled again with the
+participant ID, no two consecutive levels next to each other in brightness), so the same ID gives the same order
+here, in the presenter and in `cwtool.calibration.scrambled(DEFAULT, id)`. The only spoken cue is the rest phrase at
+the start ("keep your gaze on the point"). It is saved as `calibration_run_*.csv` in the presenter's run format. It
+comes first, with the participant fresh and nothing else to do. *Departure from the standalone presenter:* the
+fixation point is shown (it is in every condition of this tool), so gaze is steady and the calibration and the
+validation are recorded the same way. It covers under 0.1 deg².
+
+### Load timeline (about 21 min)
 
 | Phase | Length | Load |
 |---|---|---|
 | Baseline | 2 min | rest, looking at the fixation point |
 | Instruction | 10 s | spoken instruction for the next block |
-| Block 1 to 4 | 2.5 min each | 0-, 1-, 2- and 3-back, in a seeded order |
+| Block 1 to 3 | 2.5 min each | 1-, 2- and 3-back, in a seeded order |
 | Rest | 20 s | between blocks, before the next instruction |
-| Block 5 to 8 | 2.5 min each | the four levels again, in another seeded order |
-| Final rest | 2 min | rest |
+| Block 4 to 6 | 2.5 min each | the three levels again, in another seeded order |
+| Final rest | 1 min | rest |
 
-In total that is 2 + 8 × (10 s + 2.5 min) + 7 × 20 s + 2 = 27.7 min. Each load level gets 5 minutes over its two
-blocks: enough for time-domain HRV per level, and ultra-short measures (1–2.5 min) per block.
+In total that is 2 + 6 × (10 s + 2.5 min) + 5 × 20 s + 1 = 20.7 min, and with the 4 min 56 s calibration 25.6 min in
+the headset. There is no 0-back: the rests are the low-load reference, and the lowest task level is 1-back. Each load
+level gets 5 minutes over its two blocks: enough for time-domain HRV per level, and ultra-short measures (RMSSD and
+heart rate, 1–2.5 min) per block.
 
-**Order.** Each round of four blocks is a permutation of the four levels, seeded by the participant ID (the same
+**Order.** Each round of three blocks is a permutation of the three levels, seeded by the participant ID (the same
 xmur3/mulberry32 seeding as the calibration presenter, so it can be regenerated). The second round does not start with
-the level that ended the first. Two rounds rather than one random order of eight keep the time-on-task drift equal across
+the level that ended the first. Two rounds rather than one random order of six keep the time-on-task drift equal across
 levels.
 
 ### Visual timeline
@@ -76,9 +85,19 @@ The visual stimuli run continuously from the start of the baseline to the end of
 of 24–36 s (random lengths, so segment changes drift against block changes). Each segment is one condition (below);
 within a segment the stimulus changes in **steps** of 5–10 s.
 
-There are six segment types (the targets have two), about 9 segments of each per session, in a seeded order with no
-type twice in a row. After drawing the order, the generator checks that every type spends roughly the same share of
-its time in each load phase (rest, 0-, 1-, 2-, 3-back; within ±25 % of an even split), and redraws if not (seed plus
+Each participant gets one of two **visual sets**, chosen on the control page (the choice is in `session.json` and in the
+folder name, `_setA` or `_setB`):
+
+| Set | Segment types |
+|---|---|
+| **A, solid colours** | constant (the reference), gray steps, equal-luminance colour, natural scenes |
+| **B, circle size** | constant, target size (a fixed-luminance circle of varying diameter on a dark and on a bright background), natural scenes |
+
+Solid fields and circles are given to different participants, so each set has more time per condition in the shorter
+session (about 10 segments of each type in A, 13 in B). A participant who does both campaigns can be given the same
+set or the other: it is the experimenter's choice. The generator can also make target luminance segments (the
+code keeps them), but no set includes them. Segments come in a seeded order with no type twice in a row. After drawing the order, the generator checks that every type spends roughly the same share of
+its time in each load phase (rest, 1-, 2-, 3-back; within ±25 % of an even split), and redraws if not (seed plus
 an attempt counter, so it stays reproducible). The per-participant order is previewed before the run and saved with
 it.
 
@@ -176,7 +195,7 @@ uses no shading or tone mapping, as in the calibration presenter, so each pixel 
 
 - **Items:** spoken digits 1–9, one every 2.5 s, so 60 items per block.
 - **Targets:** 20 per block (one third).
-  - **0-back:** the target is a digit named in the instruction, seeded per block.
+  - **0-back** (supported by the code, not used in the session): the target is a digit named in the instruction.
   - **1- to 3-back:** a target is a digit equal to the one *n* items back.
   - For 2- and 3-back, about 6 lures per block (equal to the digit *n* − 1 or *n* + 1 back, but not *n*), so
     familiarity alone does not work.
@@ -283,12 +302,12 @@ time (ms), which is how the recordings of the eye tracker and the physiology log
 
 | File | Content |
 |---|---|
-| `<date>_event_log.csv` | cwtool's `event_log` format (`Event, Start Time, End Time, Duration (s), Start (unix s), End (unix s)`), one row per **load** phase: `Baseline`, `Instruction`, `0-back` … `3-back`, `Rest`, `Final rest`. Copy it into the recording folder and cwtool shades and averages ΔPD per load level. |
+| `<date>_event_log.csv` | cwtool's `event_log` format (`Event, Start Time, End Time, Duration (s), Start (unix s), End (unix s)`), one row per **load** phase: `Calibration`, `Baseline`, `Instruction`, `1-back` … `3-back`, `Rest`, `Final rest`. Copy it into the recording folder and cwtool shades and averages ΔPD per load level. |
 | `visual_log.csv` | One row per visual **step**. The same six columns first (Event = condition), then segment, condition, step, background RGB, target RGB, target diameter (°), scene, nominal Y of the gaze circle and of the whole field, cd/m² (with a profile), and the frame onset. |
 | `nback_log.csv` | One row per item heard: block, n, item, digit, target, lure, the 0-back target digit, onset (Unix ms), response (Unix ms), RT (ms), outcome, extra presses, interrupted. |
 | `session.json` | Participant, mode, language, seed and generator attempt, app version, screen geometry, display profile, frame statistics (mean frame time, dropped frames), audio output latency, browser. |
 | `calibration_run_*.csv` | When the calibration was played: the calibration presenter's run format, unchanged. |
-| `practice_nback_log.csv` | The practice, in the n-back format. |
+| `practice_nback_log.csv` | The practice (a separate folder, `<participant>_practice_<date>/`), in the n-back format. |
 
 cwtool reads one event track per recording, so the visual segments cannot yet be shaded alongside the load
 phases (open question 7).
@@ -311,14 +330,14 @@ adds about one frame. Frames longer than 1.5 times the median frame time are cou
 ## Known limitations
 
 - **Audio and motor confounds.** The rests are silent and need no presses, while every n-back block has 60 digits
-  and about 20 presses. Hearing and pressing cause small pupil and heart-rate responses of their own. Across the four
+  and about 20 presses. Hearing and pressing cause small pupil and heart-rate responses of their own. Across the three
   n-back levels these are matched (the same items and target rate), so load comparisons *between* levels are clean;
   rest against task includes them. See open question 1.
 - **Field of view on the monitor.** A monitor covers only part of the visual field (about 60° × 35°), and the
   rest of the dark room adds a little light that the tool does not control.
 - **Nominal luminance.** Without a photometer, "equal luminance" and every cd/m² value are nominal sRGB.
-- **Ultra-short HRV.** HRV per 2.5 min block is ultra-short; per load level (5 min over two blocks) it is
-  standard short-term.
+- **Ultra-short HRV.** HRV per 2.5 min block is ultra-short (RMSSD and heart rate; not LF or LF/HF); per load
+  level (5 min over two blocks) it is standard short-term, as the mean of two block values.
 - **Vergence and accommodation** are not varied: the monitor is at one distance, and the Varjo has a fixed focal
   distance and the fixation point at one depth.
 
@@ -335,8 +354,7 @@ Each has the default the code would use if not decided otherwise.
 4. **Equal-luminance sets:** both the dim and the bright set, or only one? *Default: both, alternating.*
 5. **Segment and step lengths:** segments of 24–36 s and steps of 5–10 s. Longer steps reach steady state (dilation
    time constants up to about 10 s) but give fewer changes per session. *Default: as above.*
-6. **Block length:** 2.5 min, with each level twice, fits 28 minutes. Longer blocks would need fewer levels.
-   *Default: 2.5 min, four levels.*
+6. **Block length:** 2.5 min, with each level twice, fits 21 minutes. *Default: 2.5 min, three levels.*
 7. **A second event track in cwtool**, so `visual_log.csv` can be shaded next to the load phases. That is a cwtool
    change, to be logged in its open issues. *Default: not needed for the presenter; the visual log is already in the
    event_log columns.*
@@ -355,6 +373,6 @@ After this document is agreed:
 5. VR mode.
 6. Saving: IndexedDB and zip download; the local server.
 7. Display characterisation and the display profile.
-8. ~~Calibration sequence and practice.~~ Done: the first phases of the recording (`src/prelude.js`).
+8. ~~Calibration sequence and practice.~~ Done: the calibration is the first phase of the recording (`src/prelude.js`); the practice is a part of the page of its own (`src/practice.js`).
 9. ~~Scene selection and conversion script.~~ Done: four scenes, `tools/make_scenes.py`.
 10. Docs pages for running a session and for the files.

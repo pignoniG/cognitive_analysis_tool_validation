@@ -29,16 +29,16 @@ test("equal-luminance sets match the design table", () => {
     for (const rgb of Object.values(set.colours)) assert.ok(Math.abs(nominalY(rgb) / set.Y - 1) < 0.02, String(rgb));
 });
 
-test("load timeline: 27.7 min, two rounds of the four levels", () => {
+test("load timeline: 20.7 min, two rounds of the three levels (1- to 3-back)", () => {
   for (const seed of SEEDS) {
     const rounds = loadOrder(seed);
     assert.equal(rounds.length, 2);
-    for (const r of rounds) assert.deepEqual([...r].sort(), SESSION.levels);
-    assert.notEqual(rounds[1][0], rounds[0][3], seed);
+    for (const r of rounds) assert.deepEqual([...r].sort(), [1, 2, 3]);
+    assert.notEqual(rounds[1][0], rounds[0][2], seed);
     const phases = loadTimeline(seed);
-    assert.equal(totalDuration(phases), 1660);
+    assert.equal(totalDuration(phases), 1240);
     const blocks = phases.filter((p) => p.kind === "block");
-    assert.equal(blocks.length, 8);
+    assert.equal(blocks.length, 6);
     assert.deepEqual(blocks.map((b) => b.level), rounds.flat());
     // contiguous, and every block right after its instruction
     phases.forEach((p, i) => { if (i) assert.ok(close(p.start, phases[i - 1].start + phases[i - 1].duration)); });
@@ -58,11 +58,28 @@ test("split fills the total with pieces near the asked length", () => {
   }
 });
 
+/** The generator with every segment type, to test them all whichever sets a session uses. */
+const ALL = { ...VISUAL, sets: { ALL: { label: "all", types: VISUAL.types } }, defaultSet: "ALL" };
+
+test("the sets: A is solid colours, B is circle size, scenes in both", () => {
+  assert.deepEqual(VISUAL.sets.A.types, ["constant", "steps", "colour", "scenes"]);
+  assert.deepEqual(VISUAL.sets.B.types, ["constant", "target_size", "scenes"]);
+  const phases = loadTimeline("P01");
+  for (const set of ["A", "B"]) {
+    const types = new Set(visualTimeline("P01", phases, { set }).segments.map((s) => s.type));
+    assert.deepEqual(types, new Set(VISUAL.sets[set].types), set);
+  }
+  assert.throws(() => visualTimeline("P01", phases, { set: "C" }), /Unknown visual set/);
+  // the default is set A, and the two sets give different sessions for the same ID
+  assert.deepEqual(visualTimeline("P01", phases), visualTimeline("P01", phases, { set: "A" }));
+  assert.notDeepEqual(visualTimeline("P01", phases, { set: "A" }).segments.map((s) => s.type), visualTimeline("P01", phases, { set: "B" }).segments.map((s) => s.type));
+});
+
 test("visual timeline: contiguous, balanced, no type twice in a row", () => {
-  for (const seed of SEEDS) {
+  for (const [seed, set] of SEEDS.flatMap((seed) => [[seed, "A"], [seed, "B"]])) {
     const phases = loadTimeline(seed);
     const T = totalDuration(phases);
-    const v = visualTimeline(seed, phases);
+    const v = visualTimeline(seed, phases, { set });
     const segs = v.segments;
     assert.ok(close(segs[0].start, 0));
     assert.ok(close(segs.at(-1).start + segs.at(-1).duration, T));
@@ -73,8 +90,8 @@ test("visual timeline: contiguous, balanced, no type twice in a row", () => {
       }
       assert.ok(s.duration > 20 && s.duration < 40, `${seed}: ${s.duration}`);
     });
-    for (const t of VISUAL.types) assert.ok(segs.filter((s) => s.type === t).length >= 8, `${seed} ${t}`);
-    assert.ok(v.balance.cost <= VISUAL.balanceTolerance, `${seed}: balance ${v.balance.cost.toFixed(2)}`);
+    for (const t of VISUAL.sets[set].types) assert.ok(segs.filter((s) => s.type === t).length >= 8, `${seed} ${set} ${t}`);
+    assert.ok(v.balance.cost <= VISUAL.balanceTolerance, `${seed} ${set}: balance ${v.balance.cost.toFixed(2)}`);
     assert.deepEqual(new Set(v.balance.states), new Set(phases.map(loadState)));
   }
   assert.deepEqual(visualTimeline("P03", loadTimeline("P03")), visualTimeline("P03", loadTimeline("P03")));
@@ -82,7 +99,7 @@ test("visual timeline: contiguous, balanced, no type twice in a row", () => {
 
 test("within a segment only one variable changes per step", () => {
   for (const seed of SEEDS.slice(0, 10)) {
-    for (const seg of visualTimeline(seed, loadTimeline(seed)).segments) {
+    for (const seg of visualTimeline(seed, loadTimeline(seed), {}, ALL).segments) {
       const st = seg.steps;
       assert.ok(close(st.reduce((s, x) => s + x.duration, 0), seg.duration));
       assert.equal(st[0].change, "onset");
@@ -107,7 +124,7 @@ test("within a segment only one variable changes per step", () => {
 });
 
 test("condition details follow the design", () => {
-  const v = visualTimeline("P11", loadTimeline("P11"), { maxDiameter: 31 });
+  const v = visualTimeline("P11", loadTimeline("P11"), { maxDiameter: 31 }, ALL);
   for (const s of v.steps) {
     if (s.type === "steps") {
       assert.ok(GRAY_LEVELS.includes(s.field[0]));
@@ -127,7 +144,7 @@ test("condition details follow the design", () => {
   // both backgrounds and both colour sets are used
   for (const t of ["target_luminance", "target_size", "colour"])
     assert.equal(new Set(v.segments.filter((s) => s.type === t).map((s) => s.variant)).size, 2, t);
-  assert.throws(() => visualTimeline("P11", loadTimeline("P11"), { maxDiameter: 2 }));
+  assert.throws(() => visualTimeline("P11", loadTimeline("P11"), { maxDiameter: 2 }, ALL));
 });
 
 test("n-back blocks have exact targets and lures, by the definition", () => {

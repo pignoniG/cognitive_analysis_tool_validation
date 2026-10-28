@@ -35,7 +35,7 @@ class FakeAudio {
 
 test("cues: every clip exists, phrases fit their phases, digits fit their interval", () => {
   const cues = audioCues(plan);
-  assert.equal(cues.filter((c) => c.kind === "digit").length, 8 * 60);
+  assert.equal(cues.filter((c) => c.kind === "digit").length, 6 * 60);
   for (const [lang, m] of Object.entries(manifests)) {
     for (const c of cues) assert.ok(m.clips[c.id], `${lang}: ${c.id}`);
     for (let i = 1; i <= 9; i++) assert.ok(m.clips[`digit_${i}`].duration_s < NBACK.soa - 1, `${lang} digit ${i}`);
@@ -50,8 +50,8 @@ test("cues: every clip exists, phrases fit their phases, digits fit their interv
     assert.ok(cues.some((c) => c.kind === "digit" && c.block === b.block && c.item === 0 && c.e === b.start));
     assert.ok(cues.some((c) => c.id === "start" && c.block === b.block && c.e === b.start + CUE_TIMES.start));
   }
-  const zero = plan.blocks.find((b) => b.level === 0);
-  assert.ok(cues.some((c) => c.id === `back_0_${zero.targetDigit}`));
+  // each block's instruction names its level (there is no 0-back, so no target digit to announce)
+  for (const b of plan.blocks) assert.ok(cues.some((c) => c.id === `back_${b.level}` && c.block === b.block));
 });
 
 /** Run a whole session at 60 Hz with a participant who presses `rt` ms after every target (and on lures if
@@ -86,20 +86,20 @@ function simulate({ rt = 600, fooled = false, at = {}, resumeAfterMs = null } = 
   return { run, task, rows, scores, audio };
 }
 
-test("a full session: 480 rows, all hits at the right reaction time", () => {
+test("a full session: 360 rows, all hits at the right reaction time", () => {
   const { run, rows, scores } = simulate();
   assert.equal(run.summary.status, "completed");
   assert.deepEqual(rows[0], NBACK_LOG_HEADER);
-  assert.equal(rows.length - 1, 480);
+  assert.equal(rows.length - 1, 360);
   const col = (n) => NBACK_LOG_HEADER.indexOf(n);
   const outcomes = rows.slice(1).map((r) => r[col("outcome")]);
-  assert.equal(outcomes.filter((o) => o === "hit").length, 160);
-  assert.equal(outcomes.filter((o) => o === "correct_rejection").length, 320);
+  assert.equal(outcomes.filter((o) => o === "hit").length, 120);
+  assert.equal(outcomes.filter((o) => o === "correct_rejection").length, 240);
   for (const r of rows.slice(1)) if (r[col("outcome")] === "hit") assert.ok(Math.abs(Number(r[col("rt_ms")]) - 600) <= 17);
   // onsets follow the plan: 2.5 s apart within a block
   const b1 = rows.slice(1).filter((r) => r[col("block")] === "1").map((r) => Number(r[col("onset_unix_ms")]));
   for (let i = 1; i < b1.length; i++) assert.ok(Math.abs(b1[i] - b1[i - 1] - 2500) <= 1);
-  assert.equal(scores.length, 8);
+  assert.equal(scores.length, 6);
   for (const s of scores) { assert.equal(s.hit, 20); assert.equal(s.false_alarm, 0); assert.ok(s.dprime > 3); }
 });
 

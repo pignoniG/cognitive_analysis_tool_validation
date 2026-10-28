@@ -63,11 +63,11 @@ export const nbackLogRow = (block, n, item, it, targetDigit, outcome) => {
     it.responseMs != null ? Math.round(it.responseMs) : null, rt, outcome, it.extra || 0, it.interrupted ? 1 : 0]);
 };
 
-/** Folder name of a session: `<participant>_<screen|vr>_<YYYY-MM-DD_HH-MM-SS>`, safe for any file system. */
-export function sessionFolder(participant, mode, unixMs) {
+/** Folder name of a session: `<participant>_<screen|vr>[_set<A|B>]_<YYYY-MM-DD_HH-MM-SS>`, safe for any file system. */
+export function sessionFolder(participant, mode, unixMs, set = null) {
   const d = new Date(unixMs);
   const safe = String(participant).trim().replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "anonymous";
-  return `${safe}_${mode}_${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+  return `${safe}_${mode}${set ? `_set${set}` : ""}_${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

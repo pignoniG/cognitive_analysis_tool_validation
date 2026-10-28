@@ -1,20 +1,20 @@
-// Everything a participant ID generates: the optional calibration and practice, then the load phases, the visual
-// timeline and the n-back blocks, all on one clock from the start of the recording.
+// Everything a participant ID generates: the optional calibration, then the load phases, the visual timeline (of
+// set A or B) and the n-back blocks, all on one clock from the start of the recording.
 
-import { SESSION } from "./config.js";
+import { SESSION, VISUAL } from "./config.js";
 import { loadTimeline } from "./load.js";
 import { visualTimeline } from "./visual.js";
 import { nbackBlock } from "./nback.js";
 import { preTimeline } from "./prelude.js";
 
 /** The plan for `participant`, for a display whose largest whole target is `maxDiameter` (°). `options`:
- *  `{ calibration, practice }` (both on by default). */
+ *  `{ calibration }` (on by default) and `{ set }`, the visual set (A or B). */
 export function makePlan(participant, maxDiameter = Infinity, options = {}) {
-  const opts = { calibration: options.calibration ?? true, practice: options.practice ?? true };
+  const opts = { calibration: options.calibration ?? true, set: options.set ?? VISUAL.defaultSet };
   const pre = preTimeline(participant, opts);
   const off = pre.duration;
   const loadPhases = loadTimeline(participant);
-  const visual = visualTimeline(participant, loadPhases, { maxDiameter });
+  const visual = visualTimeline(participant, loadPhases, { maxDiameter, set: opts.set });
   const items = SESSION.block / 2.5;
   const blocks = loadPhases.filter((p) => p.kind === "block").map((p) => ({ ...p, ...nbackBlock(participant, p.block, p.level, items) }));
 
@@ -23,10 +23,9 @@ export function makePlan(participant, maxDiameter = Infinity, options = {}) {
   const segments = visual.segments.map((s) => ({ ...shift(s), steps: s.steps.map(shift) }));
   return {
     participant, maxDiameter: Number.isFinite(maxDiameter) ? maxDiameter : null, options: opts,
-    pre: { duration: off, calibration: pre.calibration, practice: pre.practice },
+    pre: { duration: off, calibration: pre.calibration },
     phases: [...pre.phases, ...loadPhases.map(shift)],
     visual: { ...visual, segments, steps: [...pre.steps, ...segments.flatMap((s) => s.steps)], pre: pre.steps },
     blocks: blocks.map(shift),
-    practiceBlocks: pre.practiceBlocks,
   };
 }

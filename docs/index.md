@@ -24,7 +24,9 @@ The same ID always gives the same session.
 | Screen presenter: control page, stimulus window, all visual conditions, timing, pause, logging ([running a session](running.md)) | done; scenes are placeholders |
 | n-back audio: Kokoro clips in Italian and English, scheduling on the audio clock, responses, scores | done; voices to be judged |
 | VR mode: the same session in the headset through WebXR, controller responses, pause when the headset leaves VR | written; not yet tried on a headset |
-| zip download and crash recovery, photometry, calibration and practice, scenes | to do, in this order |
+| Scenes: four Poly Haven panoramas (8k for the headset, a 16k crop for the monitor) | done |
+| Calibration (cwtool's full sequence, first in the recording), the n-back practice (a part of the page of its own), visual sets A and B | done |
+| zip download and crash recovery, photometry | to do, in this order |
 
 ## Running the preview
 

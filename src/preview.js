@@ -17,7 +17,7 @@ const TYPE_NAMES = {
 const TYPE_COLOURS = {
   constant: "#9aa1b2", steps: "#E6643B", target_luminance: "#96D35F", target_size: "#3d8b6e", colour: "#7b61c9", scenes: "#2f7fb8", calibration: "#c9a227", practice: "#8a8f9e",
 };
-const STATE_VAR = { rest: "--rest", "0-back": "--l0", "1-back": "--l1", "2-back": "--l2", "3-back": "--l3" };
+const STATE_VAR = { rest: "--rest", "1-back": "--l1", "2-back": "--l2", "3-back": "--l3" };
 const rgb = (c) => `rgb(${c.join(",")})`;
 const mmss = (t) => { const s = Math.round(t); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 
@@ -33,10 +33,9 @@ const tip = (node, text) => { el("title", {}, node).textContent = text; return n
 export function describePlan(plan) {
   const { phases, visual, maxDiameter, pre } = plan;
   const dropped = VISUAL.target.sizes.filter((s) => maxDiameter !== null && s > maxDiameter);
-  const parts = [pre.calibration && "calibration", pre.practice && "practice"].filter(Boolean);
   const session = totalDuration(phases) - pre.duration;
-  return `${mmss(totalDuration(phases))} min` + (parts.length ? ` (${parts.join(" and ")} ${mmss(pre.duration)}, then the session ${mmss(session)})` : "") +
-    `, ${visual.segments.length} visual segments, ${visual.segments.reduce((n, s) => n + s.steps.length, 0)} steps ` +
+  return `${mmss(totalDuration(phases))} min` + (pre.calibration ? ` (calibration ${mmss(pre.duration)}, then the session ${mmss(session)})` : "") +
+    `, visual set ${plan.options.set}: ${visual.segments.length} segments, ${visual.segments.reduce((n, s) => n + s.steps.length, 0)} steps ` +
     `(generator attempt ${visual.attempt + 1}, largest deviation ${Math.round(visual.balance.cost * 100)} %).` +
     (dropped.length ? ` Sizes ${dropped.join("°, ")}° do not fit and are left out.` : "");
 }
@@ -110,7 +109,8 @@ function drawTimeline(phases, visual, onStep) {
 
   $("#legend").innerHTML =
     Object.entries(STATE_VAR).map(([s, c]) => `<span><i style="background:var(${c})"></i>${s === "rest" ? "Rest, instruction" : s}</span>`).join("") +
-    Object.entries(TYPE_NAMES).map(([t, n]) => `<span><i style="background:${TYPE_COLOURS[t]}"></i>${n}</span>`).join("") +
+    Object.entries(TYPE_NAMES).filter(([t]) => visual.steps.some((st) => st.type === t))
+      .map(([t, n]) => `<span><i style="background:${TYPE_COLOURS[t]}"></i>${n}</span>`).join("") +
     `<span>Stimulus row: the field's colour; a target is the inner bar, its height in proportion to its diameter (32° = full height); scenes are hatched. Click a step to show it in the stimulus window.</span>`;
 }
 

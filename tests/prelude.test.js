@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { CALIBRATION, PRACTICE, NBACK } from "../src/config.js";
 import { calibrationSteps, calibrationLength, designedSteps, scrambleIndices, CalibrationRun } from "../src/calibration.js";
 import { makePlan } from "../src/plan.js";
+import { practicePlan } from "../src/prelude.js";
 import { SessionRun } from "../src/session.js";
 import { Sink } from "../src/sink.js";
 import { TaskRun, audioCues } from "../src/task.js";
@@ -29,58 +30,62 @@ test("the calibration sequence is cwtool's full calibration, in the same order f
   assert.deepEqual(calibrationSteps("P01"), p01);
 });
 
-test("a plan puts the calibration and the practice before the session, on one clock", () => {
+test("a plan puts the calibration before the session, on one clock", () => {
   const plan = makePlan("P01");
-  const lead = CALIBRATION.leadIn + 291, practice = PRACTICE.levels.length * (PRACTICE.instruction + PRACTICE.items * NBACK.soa);
-  assert.equal(plan.pre.duration, lead + practice);
-  assert.equal(plan.pre.duration, 296 + 240);
-  assert.deepEqual(plan.phases.slice(0, 1 + 2 * PRACTICE.levels.length).map((p) => p.kind),
-    ["calibration", ...PRACTICE.levels.flatMap(() => ["practice_instruction", "practice_block"])]);
-  assert.equal(plan.phases.find((p) => p.kind === "baseline").start, plan.pre.duration);
+  assert.equal(plan.pre.duration, CALIBRATION.leadIn + 291);
+  assert.equal(plan.phases[0].kind, "calibration");
+  assert.equal(plan.phases[1].kind, "baseline");
+  assert.equal(plan.phases[1].start, 296);
   let t = 0;
   for (const p of plan.phases) { assert.ok(Math.abs(p.start - t) < 1e-9, `${p.label} starts at ${p.start}, expected ${t}`); t += p.duration; }
-  assert.equal(t, 536 + 1660);
-  // the visual steps cover the recording without gaps or overlaps, and the real ones start after the prelude
+  assert.equal(t, 296 + 1240);                      // 25:36
+  // the visual steps cover the recording without gaps or overlaps, and the real ones start after the calibration
   let s = 0;
   for (const st of plan.visual.steps) { assert.ok(Math.abs(st.start - s) < 0.06, `${st.type} step at ${st.start}, expected ${s}`); s = st.start + st.duration; }
   assert.ok(Math.abs(s - t) < 0.06);
   assert.ok(plan.visual.segments.every((g) => g.start >= plan.pre.duration));
   assert.equal(plan.visual.pre.filter((x) => x.type === "calibration").length, 35);   // the lead-in and 34 steps
-  assert.equal(plan.visual.pre.filter((x) => x.type === "practice").length, 1);
-  assert.equal(plan.practiceBlocks.length, 4);
-  assert.equal(plan.blocks.length, 8);
+  assert.equal(plan.blocks.length, 6);
+  assert.deepEqual(plan.blocks.map((b) => b.level).sort(), [1, 1, 2, 2, 3, 3]);
   assert.ok(plan.blocks.every((b) => b.start >= plan.pre.duration));
+  assert.equal(plan.practiceBlocks, undefined);     // the practice is not in the recording
+  assert.equal(plan.options.set, "A");
 });
 
-test("either part can be left out, and the plan still adds up", () => {
-  for (const options of [{ calibration: false }, { practice: false }, { calibration: false, practice: false }]) {
-    const plan = makePlan("P01", Infinity, options);
-    const total = plan.phases.reduce((n, p) => n + p.duration, 0);
-    assert.equal(plan.phases[0].start, 0);
-    assert.equal(total, plan.pre.duration + 1660);
-    assert.equal(plan.visual.steps[0].start, 0);
-    assert.equal(plan.phases.some((p) => p.kind === "calibration"), options.calibration !== false);
-    assert.equal(plan.phases.some((p) => p.kind === "practice_block"), options.practice !== false);
-  }
-  const bare = makePlan("P01", Infinity, { calibration: false, practice: false });
+test("the calibration can be left out, and the visual set is the participant's", () => {
+  const bare = makePlan("P01", Infinity, { calibration: false });
+  assert.equal(bare.phases[0].kind, "baseline");
+  assert.equal(bare.phases.reduce((n, p) => n + p.duration, 0), 1240);
+  assert.equal(bare.visual.steps[0].start, 0);
   const full = makePlan("P01");
-  // the session itself is the same with and without the prelude: only shifted
+  // the session itself is the same with and without the calibration: only shifted
   assert.deepEqual(bare.blocks.map((b) => b.items), full.blocks.map((b) => b.items));
   assert.deepEqual(bare.visual.segments.map((g) => [g.type, g.duration]), full.visual.segments.map((g) => [g.type, g.duration]));
+  // set B has circles and no solid colours, set A the reverse; both have scenes
+  const types = (set) => new Set(makePlan("P01", Infinity, { set }).visual.steps.map((st) => st.type));
+  assert.ok(types("A").has("colour") && types("A").has("steps") && !types("A").has("target_size"));
+  assert.ok(types("B").has("target_size") && !types("B").has("colour") && !types("B").has("steps"));
+  assert.ok(types("A").has("scenes") && types("B").has("scenes"));
+  assert.equal(makePlan("P01", Infinity, { set: "B" }).options.set, "B");
 });
 
-test("the cues of the practice: its own digits and instructions, no clip overlapping the next", () => {
-  const plan = makePlan("P01");
+test("the practice plan: each level once, the end phrase, its own cues", () => {
+  const plan = practicePlan("P01");
+  assert.deepEqual(plan.phases.map((p) => p.kind), ["practice_instruction", "practice_block", "practice_instruction", "practice_block",
+    "practice_instruction", "practice_block", "practice_end"]);
+  assert.deepEqual(plan.practiceBlocks.map((b) => b.level), [1, 2, 3]);
+  assert.equal(plan.duration, 3 * (PRACTICE.instruction + PRACTICE.items * NBACK.soa) + PRACTICE.end);   // 3:05
+  let t = 0;
+  for (const p of plan.phases) { assert.equal(p.start, t); t += p.duration; }
   const cues = audioCues(plan);
-  assert.equal(cues.filter((c) => c.kind === "digit").length, 8 * 60 + 4 * PRACTICE.items);
-  assert.equal(cues.filter((c) => String(c.block).startsWith("p") && c.kind === "digit").length, 80);
-  assert.equal(cues[0].id, "rest");               // the calibration opens with "keep your gaze on the point"
-  assert.equal(cues[0].phase, "Calibration");
+  assert.equal(cues.filter((c) => c.kind === "digit").length, 3 * PRACTICE.items);
+  assert.equal(cues.at(-1).id, "end");
   for (const lang of ["it", "en"]) {
     const m = JSON.parse(readFileSync(new URL(`../assets/audio/${lang}/manifest.json`, import.meta.url))).clips;
     for (const c of cues) assert.ok(m[c.id], `${lang}: ${c.id}`);
     for (let i = 1; i < cues.length; i++) assert.ok(cues[i - 1].e + m[cues[i - 1].id].duration_s <= cues[i].e, `${lang}: ${cues[i - 1].id} overlaps ${cues[i].id}`);
   }
+  assert.deepEqual(practicePlan("P01").practiceBlocks.map((b) => b.items), plan.practiceBlocks.map((b) => b.items));
 });
 
 class FakeAudio {
@@ -91,36 +96,40 @@ class FakeAudio {
   feedback(hit) { this.feedbacks.push(hit); }
 }
 
-test("a full recording: calibration run file, practice log with feedback, and the session unchanged", () => {
-  const plan = makePlan("P01");
+/** Run a plan at 60 Hz; a participant who presses 500 ms after every target. */
+function simulate(plan, { onStepClosed } = {}) {
   const sink = new Sink("t", false), audio = new FakeAudio(), unix = (t) => 1.7e12 + t;
   const task = new TaskRun(plan, { audio, sink, unix });
-  const cal = new CalibrationRun(plan.pre.calibration, { participant: "P01", mode: "screen", runId: "t", tool: "test" }, { time_zone: "UTC" });
   let lastT = 0, t = 0;
   const run = new SessionRun(plan, { show() {}, sink, files: { events: "ev.csv", visual: "vis.csv" }, unix,
-    hooks: { onStepClosed: (st, a, b, why) => { cal.step(st, a, b, why); }, onEnd: (s) => task.end(lastT, s.status === "completed") } });
+    hooks: { onStepClosed, onEnd: (s) => task.end(lastT, s.status === "completed") } });
   const pressed = new Set();
   run.start();
   for (let i = 0; run.state !== "done" && i < 3000 * 60; i++, t += 1000 / 60) {
     lastT = t;
     run.frame(t);
     task.frame(t, run.elapsed(t), run.state);
-    // press 500 ms after every target of the practice and of the session
     for (const b of task.blocks.values()) {
       for (const it of b.items) {
         if (it.target && it.onsetPerf !== null && !pressed.has(it) && t >= it.onsetPerf + 500) { pressed.add(it); task.press(t); }
       }
     }
   }
+  return { run, task, sink, audio };
+}
+
+test("a full recording: calibration, then the session; the calibration run file reads like the presenter's", () => {
+  const plan = makePlan("P01");
+  const cal = new CalibrationRun(plan.pre.calibration, { participant: "P01", mode: "screen", runId: "t", tool: "test" }, { time_zone: "UTC" });
+  const { run, task, sink } = simulate(plan, { onStepClosed: (st, a, b, why) => { cal.step(st, a, b, why); } });
   assert.equal(run.summary.status, "completed");
-  assert.ok(Math.abs(run.summary.session_s - 2196) < 0.05);
+  assert.ok(Math.abs(run.summary.session_s - 1536) < 0.05);
 
   const ev = sink.files.get("ev.csv").trim().split("\n").map((l) => l.split(","));
-  assert.deepEqual(ev.slice(1, 10).map((r) => r[0]), ["Calibration", "Practice instruction", "Practice 0-back", "Practice instruction", "Practice 1-back",
-    "Practice instruction", "Practice 2-back", "Practice instruction", "Practice 3-back"]);
-  assert.equal(ev[10][0], "Baseline");
+  assert.deepEqual(ev.slice(1, 4).map((r) => r[0]), ["Calibration", "Baseline", "Instruction"]);
+  assert.equal(task.scores.length, 6);
+  assert.equal(sink.files.has("practice_nback_log.csv"), false);
 
-  // the calibration run file: the presenter's columns, 34 rows, in the presenter's timing
   const lines = cal.csv(true).trim().split("\n");
   const meta = lines.filter((l) => l.startsWith("# "));
   assert.ok(meta.includes("# status: completed"));
@@ -135,16 +144,18 @@ test("a full recording: calibration run file, practice log with feedback, and th
   assert.ok(table.slice(1).every((r) => r[12] === "true"));
   const durations = table.slice(1).reduce((n, r) => n + Number(r[1]), 0);
   assert.ok(Math.abs(durations - 291) < 0.1, `${durations}`);
+});
 
-  // the practice: its own log, with feedback on the presses, never in the session's log
-  const practice = sink.files.get("practice_nback_log.csv").trim().split("\n").map((l) => l.split(","));
-  assert.deepEqual(practice[0], NBACK_LOG_HEADER);
-  assert.equal(practice.length - 1, 4 * PRACTICE.items);
-  assert.equal(task.practiceScores.length, 4);
-  assert.equal(task.scores.length, 8);
-  assert.ok(practice.slice(1).filter((r) => r[4] === "1").every((r) => r[10] === "hit"));
+test("the practice run: its own log, scores and a feedback tone on every press", () => {
+  const plan = practicePlan("P01");
+  const { run, task, sink, audio } = simulate(plan);
+  assert.equal(run.summary.status, "completed");
+  const rows = sink.files.get("practice_nback_log.csv").trim().split("\n").map((l) => l.split(","));
+  assert.deepEqual(rows[0], NBACK_LOG_HEADER);
+  assert.equal(rows.length - 1, 3 * PRACTICE.items);
+  assert.equal(task.practiceScores.length, 3);
+  assert.equal(task.scores.length, 0);
+  assert.ok(rows.slice(1).filter((r) => r[4] === "1").every((r) => r[10] === "hit"));
   assert.equal(audio.feedbacks.length, plan.practiceBlocks.reduce((n, b) => n + b.items.filter((i) => i.target).length, 0));
   assert.ok(audio.feedbacks.every((hit) => hit === true));
-  const main = sink.files.get("nback_log.csv").trim().split("\n");
-  assert.equal(main.length - 1, 8 * 60);
 });

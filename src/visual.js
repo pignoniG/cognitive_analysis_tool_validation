@@ -149,12 +149,14 @@ function segmentSteps(type, variant, duration, cfg, rng, decks) {
 
 /**
  * The visual timeline for `seed` over the load `phases`.
- * Options: `maxDiameter` (°, the largest target the display shows whole; larger sizes are dropped) and `scenes`
+ * Options: `set` (A or B, the segment types the participant gets), `maxDiameter` (°, the largest target the display shows whole; larger sizes are dropped) and `scenes`
  * (scene ids, by default the configured panoramas). Returns `{ segments, steps, attempt, balance }`; every step carries its absolute `start`.
  */
-export function visualTimeline(seed, phases, { maxDiameter = Infinity, scenes } = {}, cfg = VISUAL) {
+export function visualTimeline(seed, phases, { maxDiameter = Infinity, scenes, set } = {}, cfg = VISUAL) {
   const T = totalDuration(phases);
-  const types = cfg.types;
+  const setName = set ?? cfg.defaultSet;
+  if (!cfg.sets[setName]) throw new Error(`Unknown visual set "${setName}"`);
+  const types = cfg.sets[setName].types;
   const sizes = cfg.target.sizes.filter((s) => s <= maxDiameter);
   if (!sizes.length) throw new Error(`No target size fits a display ${maxDiameter}° high`);
 
