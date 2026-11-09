@@ -94,15 +94,16 @@ Each issue says where it is, why it matters, what the presenter currently does a
 - **Proposed:** a switch to hide it during the calibration if the pupil fit shows a difference.
 - **Status:** kept.
 
-### 9. The Docker image has not been built on a server
-- **Where:** `Dockerfile`, `docker-compose.yml`, `docker-compose.proxy.yml`, `deploy/nginx-validation.conf`.
-- **Problem:** the files were written on a machine without Docker. The server (password, served files, data folder,
-  clock endpoint) is tested, and the page was run through a stand-in proxy that strips `/validation/` as the nginx
-  snippet does. Not tested: the build, the container's user and the permissions of a mounted folder, the health
-  check, and the nginx snippet against the real nginx (its network and file names were taken from a description).
-- **Now:** documented in `docs/deploying.md`, with the commands to check each.
-- **Proposed:** build it on the server, run a short session through `https://<host>/validation/` and check the
-  files in the data folder, the *Clock* line and the headset's WebXR session over HTTPS.
+### 9. The Docker deployment is up, but no session has run through it yet
+- **Where:** `Dockerfile`, `docker-compose.yml`, `docker-compose.proxy.yml`, `deploy/nginx-validation.conf`, `deploy/docker-compose.uc4-nginx.yml`.
+- **Problem:** on 2026-10-28 the image was built and runs healthy on the server (`/healthz` answers), and the UC4 nginx
+  forwards `/validation/` to it (the password prompt answers 401, the UC4 site is unchanged). Since then it has an
+  address of its own, `https://validation.137-204-97-86.sslip.io/`, through a front nginx in `/srv/edge` with an
+  automatically renewed certificate (the root address works: the page uses only relative addresses). Not yet tried: a session through that address (files in the data folder, the *Clock* line, the headset's
+  WebXR over HTTPS). The old `/validation/` route can be retired when everyone uses the new address; the task does not
+  depend on UC4's nginx any more.
+- **Now:** documented in `docs/deploying.md`.
+- **Proposed:** run a short dry session through the address and check the data folder; retire the UC4 route (optional) and, if wanted, an automatic redeploy from GitHub in the style of the other services.
 - **Status:** needs data.
 
 ### 10. The clock offset covers the server and the page, not the other devices

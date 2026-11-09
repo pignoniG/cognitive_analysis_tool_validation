@@ -5,10 +5,24 @@ deployments, while the page is used from the lab computer (monitor or headset). 
 the page, the files and the timing are the same. Two things are added: the server keeps the files, and the page
 measures the offset between the server's clock and the computer's.
 
-!!! note "Not yet run on a server"
-    The image and the compose files were written and checked without Docker at hand: the server, the password, the
-    data folder, the clock offset and a sub-path proxy (a stand-in for nginx) were all tested, but the image was not
-    built. Build it once and run a short session before relying on it (open issue 9).
+!!! note "Run on a server, not yet with a full session"
+    The image builds and runs healthy on the lab's server, at <https://validation.137-204-97-86.sslip.io/> (below).
+    Run a short session through it and check the data folder before relying on it (open issue 9).
+
+## The lab's server
+
+The task has its own address, **<https://validation.137-204-97-86.sslip.io/>**, served at the root. A front nginx on
+the server (`/srv/edge`) owns ports 80 and 443 for every site on the machine, handles HTTPS and renews the
+certificate, and forwards this address to `http://validation-task:8000` over the Docker network `repo_default`. The
+`Authorization` header passes through unchanged, so the task's own password (below) applies. Bodies up to 20 MB are
+allowed.
+
+- **Keep `validation-task` on the `repo_default` network** (`PROXY_NETWORK=repo_default` in `.env`): the front proxy finds
+  it there, and without it the address answers 502.
+- The page uses only relative addresses, so it works at the root and under a path alike.
+- The older route, `https://uc4.137-204-97-86.sslip.io/validation/` through the UC4 nginx and
+  `deploy/docker-compose.uc4-nginx.yml` (below), still works but is no longer the address to give out; the original
+  `https://137-204-97-86.sslip.io/validation/` redirects to it.
 
 ## What runs where
 
@@ -45,7 +59,9 @@ ssh -L 8765:localhost:8765 user@server
 
 The browser asks for the password once (any user name).
 
-## Behind an existing nginx, with HTTPS
+## Behind an existing nginx, under a path
+
+This is how the task first went online, and the way to do it if another site already owns the host name.
 
 WebXR (the headset), audio and window management need HTTPS or `localhost`. If the server already has an nginx in
 Docker serving a site over HTTPS (for example `https://137-204-97-86.sslip.io`), the task can sit under a path of the
@@ -67,8 +83,27 @@ only relative addresses, so the path prefix needs no setting.
    allows saves up to 20 MB.
 4. **Open** `https://<host>/validation/` (with the trailing slash; without it nginx redirects).
 
-The snippet was written without sight of the server, from a description of its files. Check the paths and network
-names against the real ones, and let the existing site keep its own rules: the new location touches nothing else.
+Check the paths and network names against your own, and let the existing site keep its own rules: the new location
+touches nothing else. The snippet answers 403 over plain HTTP, so the password never crosses the network in the clear.
+
+### On the UC4 server
+
+That nginx (`uc4-datavis`) reads its snippets from single-file mounts added by compose overlays, so the task is added
+in the same way:
+
+1. In the clone of this repository, set `PROXY_NETWORK=repo_default` and `COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml`
+   in `.env`, then `docker compose up -d` (the container joins nginx's network).
+2. [`deploy/docker-compose.uc4-nginx.yml`](https://github.com/pignoniG/cognitive_analysis_tool_validation/blob/main/deploy/docker-compose.uc4-nginx.yml)
+   mounts the snippet into nginx. Add it to the compose files of the UC4 project, and recreate nginx once
+   (`docker compose up -d --no-deps --force-recreate uc4-datavis`, a few seconds of downtime).
+3. To keep the mount through the UC4 redeploys, add to `/opt/uc4-deploy/redeploy.sh` before `docker compose build`:
+
+    ```sh
+    VAL=/home/giovanpi/cognitive_analysis_tool_validation/deploy/docker-compose.uc4-nginx.yml
+    if [ -f "$VAL" ]; then COMPOSE_FILE="$COMPOSE_FILE:$VAL"; fi
+    ```
+
+After a `git pull` that changes the snippet, recreate nginx: a single-file mount keeps showing the old file.
 
 ## The password
 
