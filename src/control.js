@@ -131,7 +131,13 @@ async function prepareVR() {
 function showVR() {
   if (mode !== "vr") return;
   if (!vr) return;
-  if (vrState?.presenting) setLive("#live-window", `in the headset${vrState.frameRate ? `, ${vrState.frameRate} Hz` : ""}`);
+  if (vrState?.presenting) {
+    const inp = vrState.input, n = inp?.sources.length ?? 0;
+    const seen = (inp?.select_events ?? 0) + (inp?.polled_edges ?? 0);
+    const ctl = n ? `${n} controller${n === 1 ? "" : "s"} (${inp.sources.map((x) => x.hand || "?").join(", ")}), trigger presses seen: ${inp.select_events}${inp.polled_edges ? ` (+${inp.polled_edges} read from the gamepad)` : ""}`
+      : "NO CONTROLLER seen by the browser: the trigger will not register (use the keyboard clicker, or fix the runtime)";
+    setLive("#live-window", `in the headset${vrState.frameRate ? `, ${vrState.frameRate} Hz` : ""}; ${ctl}`, !n || (state === "running" && !seen));
+  }
   else setLive("#live-window", state === "paused" ? "left VR: the session is paused; Enter VR, then Resume" : "headset ready: press Enter VR, then put it on the participant", true);
 }
 

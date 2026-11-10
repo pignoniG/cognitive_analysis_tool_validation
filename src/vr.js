@@ -45,17 +45,40 @@ export async function createVR({ emit }) {
   });
   const camera = presenter.stage.camera;
 
+  // The participant's trigger. WebXR reports it as `selectstart` on the session; the controller's own gamepad is read
+  // every frame as well, in case a runtime exposes the controller without sending the event. Both are counted
+  // (session.json, display.input) and the control page shows them, so a controller that is not seen is found before the
+  // session starts. A press seen by both within 150 ms counts once.
+  const input = { select_events: 0, polled_edges: 0, sources: [] };
+  const held = new WeakMap();
+  let lastPress = -Infinity;
+  const sources = () => [...(session?.inputSources ?? [])].map((x) => ({ hand: x.handedness, ray: x.targetRayMode,
+    profile: x.profiles?.[0] ?? null, gamepad: !!x.gamepad, buttons: x.gamepad?.buttons.length ?? 0 }));
+  const respond = (t, counter) => {
+    input[counter]++;
+    if (t - lastPress >= 150) { lastPress = t; presenter.press(t); }
+    display = { ...display, input: { ...input, sources: sources() } };
+    emit(state());
+  };
+  const pollTrigger = (t) => {
+    for (const x of session?.inputSources ?? []) {
+      const down = !!x.gamepad?.buttons?.[0]?.pressed;              // the trigger, in the xr-standard mapping
+      if (down && !held.get(x)) respond(t, "polled_edges");
+      held.set(x, down);
+    }
+  };
+
   // The loop runs on the headset's frames while presenting and on the page's otherwise, so a pause or an abort
   // still takes effect with the headset off. Head-locked parts hang from the camera, so the camera takes this
   // frame's head pose before rendering (three.js would otherwise update it after the scene, a frame late).
   renderer.setAnimationLoop((t) => {
-    if (renderer.xr.isPresenting) renderer.xr.updateCamera(camera);
+    if (renderer.xr.isPresenting) { renderer.xr.updateCamera(camera); pollTrigger(t); }
     presenter.frame(t);
     if (renderer.xr.isPresenting) renderer.render(presenter.stage.scene, camera);
   });
 
   const state = () => ({ type: "vr", presenting: !!session, frameRate: session?.frameRate ?? null,
-    blend: session?.environmentBlendMode ?? null });
+    blend: session?.environmentBlendMode ?? null, input: { ...input, sources: sources() } });
 
   return {
     presenter,
@@ -75,8 +98,14 @@ export async function createVR({ emit }) {
       }
       session = s;
       display = { ...VR_DISPLAY, presenting: true, frame_rate_hz: s.frameRate ?? null,
-        supported_frame_rates: s.supportedFrameRates ? [...s.supportedFrameRates] : null };
-      s.addEventListener("selectstart", (e) => presenter.press(e.timeStamp));
+        supported_frame_rates: s.supportedFrameRates ? [...s.supportedFrameRates] : null, input: { ...input, sources: sources() } };
+      s.addEventListener("selectstart", (e) => respond(e.timeStamp, "select_events"));
+      s.addEventListener("inputsourceschange", () => {
+        const list = sources();
+        presenter.note(`VR input sources: ${list.length ? list.map((x) => `${x.hand || "?"} ${x.profile ?? "no profile"}${x.gamepad ? "" : " (no gamepad)"}`).join("; ") : "none"}`);
+        display = { ...display, input: { ...input, sources: list } };
+        emit(state());
+      });
       s.addEventListener("end", () => {
         session = null;
         display = { ...display, presenting: false };

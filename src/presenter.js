@@ -199,7 +199,7 @@ export class Presenter {
       scenes: this.scenes ? sceneInfo(this.scenes.manifest, this.scenes.ids) : { error: this.scenesError ?? "not loaded" },
       audio: { ...this.audio.info(), language: config.language, onsets: "expected time the sound leaves the output (Web Audio output timestamp)" },
       nback: task ? { scores: task.scores, stray_presses: task.stray, late_cues: task.late,
-        responses: this.mode === "vr" ? "controller trigger (select); keys as on the monitor" : [...RESPONSE_KEYS, "any mouse button"] } : null,
+        responses: this.mode === "vr" ? "controller trigger (select events, and the gamepad's first button read each frame; see display.input for what the browser reported); keys on the control page" : [...RESPONSE_KEYS, "any mouse button"] } : null,
       files: this.files,
       clock: this.clock?.summary() ?? null,
       saving: sink.mode, server_folder: sink.server ? sink.folder : null,
