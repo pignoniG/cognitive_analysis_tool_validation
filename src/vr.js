@@ -78,7 +78,8 @@ export async function createVR({ emit }) {
   });
 
   const state = () => ({ type: "vr", presenting: !!session, frameRate: session?.frameRate ?? null,
-    blend: session?.environmentBlendMode ?? null, input: { ...input, sources: sources() } });
+    blend: session?.environmentBlendMode ?? null, visibility: session?.visibilityState ?? null,
+    input: { ...input, sources: sources() } });
 
   return {
     presenter,
@@ -100,6 +101,17 @@ export async function createVR({ emit }) {
       display = { ...VR_DISPLAY, presenting: true, frame_rate_hz: s.frameRate ?? null,
         supported_frame_rates: s.supportedFrameRates ? [...s.supportedFrameRates] : null, input: { ...input, sources: sources() } };
       s.addEventListener("selectstart", (e) => respond(e.timeStamp, "select_events"));
+      // The list is also read every half second: a runtime may list the controllers before the listener below
+      // exists, or hide them while the view is "visible-blurred"; the control page must show what the session says now.
+      let seen = "";
+      const watch = setInterval(() => {
+        const key = JSON.stringify([s.visibilityState, sources()]);
+        if (key === seen) return;
+        seen = key;
+        display = { ...display, input: { ...input, sources: sources() } };
+        emit(state());
+      }, 500);
+      s.addEventListener("visibilitychange", () => presenter.note(`VR view: ${s.visibilityState}`));
       s.addEventListener("inputsourceschange", () => {
         const list = sources();
         presenter.note(`VR input sources: ${list.length ? list.map((x) => `${x.hand || "?"} ${x.profile ?? "no profile"}${x.gamepad ? "" : " (no gamepad)"}`).join("; ") : "none"}`);
@@ -107,6 +119,7 @@ export async function createVR({ emit }) {
         emit(state());
       });
       s.addEventListener("end", () => {
+        clearInterval(watch);
         session = null;
         display = { ...display, presenting: false };
         if (presenter.running) { presenter.note("left VR during the session: paused"); presenter.pause(); }
