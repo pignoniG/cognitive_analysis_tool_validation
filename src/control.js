@@ -134,7 +134,9 @@ function showVR() {
   if (vrState?.presenting) {
     const inp = vrState.input, n = inp?.sources.length ?? 0;
     const seen = (inp?.select_events ?? 0) + (inp?.polled_edges ?? 0);
-    const ctl = n ? `${n} controller${n === 1 ? "" : "s"} (${inp.sources.map((x) => x.hand || "?").join(", ")}), trigger presses seen: ${inp.select_events}${inp.polled_edges ? ` (+${inp.polled_edges} read from the gamepad)` : ""}`
+    const ctl = n ? `${n} controller${n === 1 ? "" : "s"} (${inp.sources.map((x) => x.hand || "?").join(", ")}), trigger presses seen: ${inp.select_events}${inp.polled_edges ? ` (+${inp.polled_edges} read from the gamepad)` : ""}` +
+      `${Object.keys(inp.by_hand ?? {}).length ? `; by hand: ${Object.entries(inp.by_hand).map(([k, v]) => `${k} ×${v}`).join(", ")}` : ""}` +
+      `${Object.keys(inp.buttons ?? {}).length ? `; buttons: ${Object.entries(inp.buttons).map(([k, v]) => `${k} ×${v}`).join(", ")}` : ""}`
       : `NO CONTROLLER listed by the headset session (view: ${vrState.visibility ?? "unknown"}): the trigger will not register; use the keyboard clicker`;
     const blurred = vrState.visibility && vrState.visibility !== "visible" ? ` [view: ${vrState.visibility}: the browser hides the controllers]` : "";
     setLive("#live-window", `in the headset${vrState.frameRate ? `, ${vrState.frameRate} Hz` : ""}; ${ctl}${blurred}`, !n || (state === "running" && !seen));

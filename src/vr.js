@@ -49,22 +49,29 @@ export async function createVR({ emit }) {
   // every frame as well, in case a runtime exposes the controller without sending the event. Both are counted
   // (session.json, display.input) and the control page shows them, so a controller that is not seen is found before the
   // session starts. A press seen by both within 150 ms counts once.
-  const input = { select_events: 0, polled_edges: 0, sources: [] };
-  const held = new WeakMap();
+  const input = { select_events: 0, polled_edges: 0, by_hand: {}, buttons: {}, sources: [] };
+  const held = new WeakMap();                                         // input source -> which buttons were down
   let lastPress = -Infinity;
   const sources = () => [...(session?.inputSources ?? [])].map((x) => ({ hand: x.handedness, ray: x.targetRayMode,
     profile: x.profiles?.[0] ?? null, gamepad: !!x.gamepad, buttons: x.gamepad?.buttons.length ?? 0 }));
-  const respond = (t, counter) => {
+  const bump = (map, key) => { map[key] = (map[key] ?? 0) + 1; };
+  const respond = (t, counter, hand) => {
     input[counter]++;
+    bump(input.by_hand, `${hand || "?"} ${counter === "select_events" ? "select" : "gamepad"}`);
     if (t - lastPress >= 150) { lastPress = t; presenter.press(t); }
     display = { ...display, input: { ...input, sources: sources() } };
     emit(state());
   };
   const pollTrigger = (t) => {
     for (const x of session?.inputSources ?? []) {
-      const down = !!x.gamepad?.buttons?.[0]?.pressed;              // the trigger, in the xr-standard mapping
-      if (down && !held.get(x)) respond(t, "polled_edges");
-      held.set(x, down);
+      const was = held.get(x) ?? [];
+      const now = (x.gamepad?.buttons ?? []).map((b) => !!b.pressed);
+      now.forEach((down, i) => {
+        if (!down || was[i]) return;
+        bump(input.buttons, `${x.handedness || "?"}:${i}`);         // every button, so an unexpected mapping shows
+        if (i === 0) respond(t, "polled_edges", x.handedness);      // the trigger, in the xr-standard mapping
+      });
+      held.set(x, now);
     }
   };
 
@@ -100,7 +107,8 @@ export async function createVR({ emit }) {
       session = s;
       display = { ...VR_DISPLAY, presenting: true, frame_rate_hz: s.frameRate ?? null,
         supported_frame_rates: s.supportedFrameRates ? [...s.supportedFrameRates] : null, input: { ...input, sources: sources() } };
-      s.addEventListener("selectstart", (e) => respond(e.timeStamp, "select_events"));
+      s.addEventListener("selectstart", (e) => respond(e.timeStamp, "select_events", e.inputSource?.handedness));
+      s.addEventListener("squeezestart", (e) => { bump(input.by_hand, `${e.inputSource?.handedness || "?"} squeeze`); emit(state()); });
       // The list is also read every half second: a runtime may list the controllers before the listener below
       // exists, or hide them while the view is "visible-blurred"; the control page must show what the session says now.
       let seen = "";
