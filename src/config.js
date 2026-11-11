@@ -12,12 +12,35 @@ export const SESSION = {
   rounds: 2,            // each round is one permutation of the levels
 };
 
-// The calibration is the calibration presenter's default sequence ("full calibration", docs/calibration-tool of
-// cwtool), played at the start of the same recording, so one recording holds the calibration and the validation.
+// The calibration is the calibration presenter's default sequence (docs/calibration-tool of cwtool), played at the start
+// of the same recording, so one recording holds the calibration and the validation. From November 2026 it is the
+// time-course calibration (cwtool.calibration.TIME_COURSE): no black, dimming after moderate and after bright light, colours
+// after a gray of the same luminance (cwtool open issue 57). The full calibration (cwtool.calibration.DEFAULT) played before
+// it, in the first run, and is kept here to regenerate such a run.
 export const CALIBRATION = {
   leadIn: 5,            // s of neutral gray before the first step, as the presenter's default
   leadGray: 128,
   presetSeed: "calibration",   // the seed of the preset order (cwtool.calibration.PRESET_SEED)
+  design: "time-course",       // or "full"
+  // time-course: [label, [r, g, b], seconds, linked] in the design's order (cwtool.calibration.TIME_COURSE_ITEMS); a linked
+  // step moves with the one before it when the order is scrambled, so each probe keeps its context
+  items: [
+    ["Gray 12", [12, 12, 12], 14, false], ["Gray 24", [24, 24, 24], 12, false], ["Gray 40", [40, 40, 40], 10, false],
+    ["Gray 64", [64, 64, 64], 9, false], ["Gray 96", [96, 96, 96], 8, false], ["Gray 140", [140, 140, 140], 7, false],
+    ["Gray 196", [196, 196, 196], 6, false], ["Gray 255", [255, 255, 255], 8, false],
+    ["Gray 128 (before dim)", [128, 128, 128], 7, false], ["Gray 24 (after moderate)", [24, 24, 24], 15, true],
+    ["Gray 96 (before dim)", [96, 96, 96], 6, false], ["Gray 12 (after moderate)", [12, 12, 12], 16, true],
+    ["Gray 255 (before dim)", [255, 255, 255], 6, false], ["Gray 24 (after bright)", [24, 24, 24], 18, true],
+    ["Blue 255 (before dim)", [0, 0, 255], 7, false], ["Gray 12 (after blue)", [12, 12, 12], 20, true],
+    ["Gray 60 (as Red 128)", [60, 60, 60], 8, false], ["Red 128", [128, 0, 0], 8, true],
+    ["Gray 110 (as Green 128)", [110, 110, 110], 7, false], ["Green 128", [0, 128, 0], 9, true],
+    ["Gray 33 (as Blue 128)", [33, 33, 33], 9, false], ["Blue 128", [0, 0, 128], 8, true],
+    ["Gray 127 (as Red 255)", [127, 127, 127], 8, false], ["Red 255", [255, 0, 0], 7, true],
+    ["Gray 220 (as Green 255)", [220, 220, 220], 7, false], ["Green 255", [0, 255, 0], 8, true],
+    ["Gray 76 (as Blue 255)", [76, 76, 76], 8, false], ["Blue 255", [0, 0, 255], 9, true],
+    ["Gray 64 (repeat)", [64, 64, 64], 9, false], ["Gray 196 (repeat)", [196, 196, 196], 7, false],
+  ],
+  // full calibration (until November 2026)
   grayLengths: { 0: 20, 36: 15, 73: 10, 109: 8, 146: 6, 182: 6, 219: 6, 255: 12 },   // gray level: seconds
   colourLevels: [64, 128, 191, 255],
   colourSeconds: 8,     // each colour, and the black step before it

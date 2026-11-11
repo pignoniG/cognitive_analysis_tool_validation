@@ -1,11 +1,15 @@
-// The calibration sequence: cwtool's "full calibration" (cwtool.calibration.full_calibration, the calibration
-// presenter's default), ported exactly: the same seed gives the same order here, in the presenter and in cwtool.
+// The calibration sequence, ported exactly from cwtool and the calibration presenter: the same seed gives the same order
+// here, in the presenter and in cwtool.
 //
-// 34 steps, 291 s: the 8 grays of Eckert et al. (2022), longer the darker; red, green and blue at four levels, each
-// after a linked black step; two grays repeated. The preset order is the pseudo-random one for the seed
-// "calibration"; a participant's run scrambles that order again with the participant ID (the presenter's "scrambled,
-// seeded by participant"), so no two consecutive levels are neighbours in brightness and each colour stays with its
-// black step.
+// The time-course calibration (cwtool.calibration.TIME_COURSE, the presenter's default from November 2026): 30 steps,
+// 281 s: eight grays from 12 to 255, no black; dimming after moderate light and after bright light, each probe linked to
+// its context; red, green and blue at 128 and 255, each after a linked gray of the same luminance; two grays repeated.
+// The full calibration (cwtool.calibration.DEFAULT, before): 34 steps, 291 s, the 8 grays of Eckert et al. (2022) longer
+// the darker, red, green and blue at four levels each after a linked black step, two grays repeated.
+//
+// The preset order is the pseudo-random one for the seed "calibration"; a participant's run scrambles that order again with
+// the participant ID (the presenter's "scrambled, seeded by participant"), so no two consecutive levels are neighbours in
+// brightness and each linked step stays with the one before it.
 
 import { CALIBRATION } from "./config.js";
 import { rngFrom, shuffled } from "./rng.js";
@@ -36,8 +40,14 @@ export function scrambleIndices(items, seed, avoid = true) {
   return best.flatMap((g) => groups[g]);
 }
 
+/** The sequence's name, and its name in cwtool. */
+export const sequenceName = (cfg = CALIBRATION) => (cfg.design === "full"
+  ? { name: "full calibration (presenter default until November 2026)", cwtool: "DEFAULT" }
+  : { name: "time-course calibration (presenter default)", cwtool: "TIME_COURSE" });
+
 /** The designed steps, `{ label, rgb, seconds, linked }`, before any ordering. */
 export function designedSteps(cfg = CALIBRATION) {
+  if (cfg.design !== "full") return cfg.items.map(([label, rgb, seconds, linked]) => ({ label, rgb: [...rgb], seconds, linked }));
   const items = Object.entries(cfg.grayLengths).map(([v, seconds]) => ({ label: `Gray ${v}`, rgb: [+v, +v, +v], seconds, linked: false }));
   ["Red", "Green", "Blue"].forEach((name, axis) => {
     for (const v of cfg.colourLevels) {
@@ -99,7 +109,7 @@ export class CalibrationRun {
     const meta = {
       tool: this.tool, run_id: this.runId, participant: this.participant, mode: this.mode,
       status: complete ? "completed" : final ? "incomplete" : "running",
-      sequence_name: "full calibration (presenter default)", order: "scrambled, seeded by participant", seed: this.participant,
+      sequence_name: sequenceName().name, order: "scrambled, seeded by participant", seed: this.participant,
       keep_neighbours_apart: true,
       started_iso: new Date(first).toISOString(), sequence_start_unix_ms: first.toFixed(3),
       planned_total_s: calibrationLength(info.steps), actual_total_s: ((last.end - first) / 1000).toFixed(3),

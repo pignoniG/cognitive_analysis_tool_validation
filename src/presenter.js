@@ -9,7 +9,7 @@ import { stepLuminance, GAZE_RADIUS } from "./geometry.js";
 import { SessionRun } from "./session.js";
 import { Sink, serverAvailable } from "./sink.js";
 import { eventLogName, sessionFolder } from "./formats.js";
-import { CalibrationRun } from "./calibration.js";
+import { CalibrationRun, sequenceName } from "./calibration.js";
 import { ClockRecorder } from "./clock.js";
 import { AudioCues } from "./audio.js";
 import { loadScenes, sceneInfo } from "./scenes.js";
@@ -193,7 +193,7 @@ export class Presenter {
       load_order: plan.phases.filter((p) => p.kind === "block").map((p) => p.level),
       visual_set: { set: plan.options.set, label: VISUAL.sets[plan.options.set].label, types: VISUAL.sets[plan.options.set].types },
       prelude: { calibration: plan.options.calibration, duration_s: plan.pre.duration,
-        calibration_sequence: plan.pre.calibration ? "full calibration, scrambled by participant ID (cwtool.calibration.scrambled(DEFAULT, participant))" : null },
+        calibration_sequence: plan.pre.calibration ? `${sequenceName().name}, scrambled by participant ID (cwtool.calibration.scrambled(${sequenceName().cwtool}, participant))` : null },
       display: { ...this.display(), largest_target_planned_deg: plan.maxDiameter, gaze_circle_radius_deg: GAZE_RADIUS },
       luminance: "nominal sRGB (no display profile); natural scenes: not computed",
       scenes: this.scenes ? sceneInfo(this.scenes.manifest, this.scenes.ids) : { error: this.scenesError ?? "not loaded" },

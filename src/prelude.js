@@ -1,4 +1,4 @@
-// What comes before the load timeline in the same recording: the calibration (cwtool's full calibration sequence,
+// What comes before the load timeline in the same recording: the calibration (the presenter's default sequence,
 // so the pupil model can be fitted on the participant's own recording). It is optional and counts within the setup
 // time, not the session's minutes. It comes first, with the participant fresh and nothing else to do; the session's
 // 2-minute baseline follows to let the pupil settle.

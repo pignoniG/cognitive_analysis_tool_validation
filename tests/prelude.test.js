@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { CALIBRATION, PRACTICE, NBACK } from "../src/config.js";
-import { calibrationSteps, calibrationLength, designedSteps, scrambleIndices, CalibrationRun } from "../src/calibration.js";
+import { calibrationSteps, calibrationLength, designedSteps, scrambleIndices, sequenceName, CalibrationRun } from "../src/calibration.js";
 import { makePlan } from "../src/plan.js";
 import { practicePlan } from "../src/prelude.js";
 import { SessionRun } from "../src/session.js";
@@ -11,14 +11,37 @@ import { Sink } from "../src/sink.js";
 import { TaskRun, audioCues } from "../src/task.js";
 import { CALIBRATION_RUN_COLUMNS, NBACK_LOG_HEADER } from "../src/formats.js";
 
-test("the calibration sequence is cwtool's full calibration, in the same order for the same seed", () => {
-  // cwtool.calibration.DEFAULT (the preset order) and cwtool.calibration.scrambled(DEFAULT, "P01"), from cwtool
+const FULL = { ...CALIBRATION, design: "full" };
+
+test("the calibration is cwtool's time-course calibration, in the same order for the same seed", () => {
+  // cwtool.calibration.TIME_COURSE (the preset order) and cwtool.calibration.scrambled(TIME_COURSE, "P01"), from cwtool
   const designed = designedSteps();
+  assert.equal(designed.length, 30);
+  assert.equal(calibrationLength(designed), 281);
+  assert.ok(designed.every((s) => s.rgb.some((c) => c > 0)));            // no black
+  const preset = scrambleIndices(designed, CALIBRATION.presetSeed).map((i) => designed[i].label);
+  assert.deepEqual(preset.slice(0, 6), ["Gray 96 (before dim)", "Gray 12 (after moderate)", "Gray 40", "Gray 96",
+    "Gray 196 (repeat)", "Gray 127 (as Red 255)"]);
+  const p01 = calibrationSteps("P01");
+  assert.deepEqual(p01.map((s) => s.label), ["Gray 24", "Gray 64 (repeat)", "Blue 255 (before dim)", "Gray 12 (after blue)",
+    "Gray 96", "Gray 196", "Gray 128 (before dim)", "Gray 24 (after moderate)", "Gray 96 (before dim)", "Gray 12 (after moderate)",
+    "Gray 220 (as Green 255)", "Green 255", "Gray 76 (as Blue 255)", "Blue 255", "Gray 255 (before dim)", "Gray 24 (after bright)",
+    "Gray 110 (as Green 128)", "Green 128", "Gray 255", "Gray 12", "Gray 60 (as Red 128)", "Red 128", "Gray 196 (repeat)",
+    "Gray 33 (as Blue 128)", "Blue 128", "Gray 127 (as Red 255)", "Red 255", "Gray 64", "Gray 40", "Gray 140"]);
+  assert.deepEqual(p01.slice(0, 5).map((s) => s.source + 1), [27, 12, 13, 14, 4]);
+  // every linked step comes right after its context
+  p01.forEach((s, i) => { if (s.linked) assert.equal(p01[i - 1].source + 1, s.source); });
+  assert.equal(sequenceName().cwtool, "TIME_COURSE");
+});
+
+test("the full calibration of the first runs is still there, in cwtool's order", () => {
+  // cwtool.calibration.DEFAULT (the preset order) and cwtool.calibration.scrambled(DEFAULT, "P01"), from cwtool
+  const designed = designedSteps(FULL);
   assert.equal(designed.length, 34);
   assert.equal(calibrationLength(designed), 291);
-  const preset = scrambleIndices(designed, CALIBRATION.presetSeed).map((i) => designed[i].label);
+  const preset = scrambleIndices(designed, FULL.presetSeed).map((i) => designed[i].label);
   assert.deepEqual(preset.slice(0, 6), ["Gray 255", "Gray 219", "Black", "Blue 255", "Black", "Green 191"]);
-  const p01 = calibrationSteps("P01");
+  const p01 = calibrationSteps("P01", FULL);
   assert.deepEqual(p01.map((s) => s.label), [
     "Black", "Green 64", "Gray 73", "Black", "Blue 64", "Black", "Red 255", "Gray 219", "Gray 146", "Gray 182 (repeat)",
     "Gray 73 (repeat)", "Gray 36", "Black", "Green 191", "Gray 255", "Black", "Red 64", "Black", "Red 128", "Gray 109", "Black",
@@ -26,25 +49,26 @@ test("the calibration sequence is cwtool's full calibration, in the same order f
   assert.deepEqual(p01.slice(0, 3).map((s) => s.source + 1), [32, 33, 28]);
   // every colour comes right after its black step
   p01.forEach((s, i) => { if (s.linked) { assert.equal(p01[i - 1].label, "Black"); assert.equal(p01[i - 1].source + 1, s.source); } });
-  assert.notDeepEqual(calibrationSteps("P02").map((s) => s.label), p01.map((s) => s.label));
-  assert.deepEqual(calibrationSteps("P01"), p01);
+  assert.notDeepEqual(calibrationSteps("P02", FULL).map((s) => s.label), p01.map((s) => s.label));
+  assert.deepEqual(calibrationSteps("P01", FULL), p01);
+  assert.equal(sequenceName(FULL).cwtool, "DEFAULT");
 });
 
 test("a plan puts the calibration before the session, on one clock", () => {
   const plan = makePlan("P01");
-  assert.equal(plan.pre.duration, CALIBRATION.leadIn + 291);
+  assert.equal(plan.pre.duration, CALIBRATION.leadIn + 281);
   assert.equal(plan.phases[0].kind, "calibration");
   assert.equal(plan.phases[1].kind, "baseline");
-  assert.equal(plan.phases[1].start, 296);
+  assert.equal(plan.phases[1].start, 286);
   let t = 0;
   for (const p of plan.phases) { assert.ok(Math.abs(p.start - t) < 1e-9, `${p.label} starts at ${p.start}, expected ${t}`); t += p.duration; }
-  assert.equal(t, 296 + 1240);                      // 25:36
+  assert.equal(t, 286 + 1240);                      // 25:26
   // the visual steps cover the recording without gaps or overlaps, and the real ones start after the calibration
   let s = 0;
   for (const st of plan.visual.steps) { assert.ok(Math.abs(st.start - s) < 0.06, `${st.type} step at ${st.start}, expected ${s}`); s = st.start + st.duration; }
   assert.ok(Math.abs(s - t) < 0.06);
   assert.ok(plan.visual.segments.every((g) => g.start >= plan.pre.duration));
-  assert.equal(plan.visual.pre.filter((x) => x.type === "calibration").length, 35);   // the lead-in and 34 steps
+  assert.equal(plan.visual.pre.filter((x) => x.type === "calibration").length, 31);   // the lead-in and 30 steps
   assert.equal(plan.blocks.length, 6);
   assert.deepEqual(plan.blocks.map((b) => b.level).sort(), [1, 1, 2, 2, 3, 3]);
   assert.ok(plan.blocks.every((b) => b.start >= plan.pre.duration));
@@ -123,7 +147,7 @@ test("a full recording: calibration, then the session; the calibration run file 
   const cal = new CalibrationRun(plan.pre.calibration, { participant: "P01", mode: "screen", runId: "t", tool: "test" }, { time_zone: "UTC" });
   const { run, task, sink } = simulate(plan, { onStepClosed: (st, a, b, why) => { cal.step(st, a, b, why); } });
   assert.equal(run.summary.status, "completed");
-  assert.ok(Math.abs(run.summary.session_s - 1536) < 0.05);
+  assert.ok(Math.abs(run.summary.session_s - 1526) < 0.05);
 
   const ev = sink.files.get("ev.csv").trim().split("\n").map((l) => l.split(","));
   assert.deepEqual(ev.slice(1, 4).map((r) => r[0]), ["Calibration", "Baseline", "Instruction"]);
@@ -136,14 +160,15 @@ test("a full recording: calibration, then the session; the calibration run file 
   assert.ok(meta.some((l) => l.startsWith("# sequence_start_unix_ms: ")));
   const table = lines.filter((l) => !l.startsWith("# ")).map((l) => l.split(","));
   assert.deepEqual(table[0], CALIBRATION_RUN_COLUMNS);
-  assert.equal(table.length - 1, 34);
+  assert.equal(table.length - 1, 30);
   assert.equal(table[1][0], "0");
   assert.equal(table[1][6], "1");                                     // index
-  assert.equal(table[1][7], "32");                                    // source_index (P01 starts with preset step 32)
-  assert.ok(Math.abs(Number(table[1][9]) - 8) < 1e-9);               // planned_duration_s
+  assert.equal(table[1][7], "27");                                    // source_index (P01 starts with preset step 27)
+  assert.ok(Math.abs(Number(table[1][9]) - 12) < 1e-9);              // planned_duration_s (Gray 24)
   assert.ok(table.slice(1).every((r) => r[12] === "true"));
+  assert.ok(meta.includes("# sequence_name: time-course calibration (presenter default)"));
   const durations = table.slice(1).reduce((n, r) => n + Number(r[1]), 0);
-  assert.ok(Math.abs(durations - 291) < 0.1, `${durations}`);
+  assert.ok(Math.abs(durations - 281) < 0.1, `${durations}`);
 });
 
 test("the practice run: its own log, scores and a feedback tone on every press", () => {

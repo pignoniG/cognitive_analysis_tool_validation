@@ -47,12 +47,17 @@ The calibration is played by the same page as the first phase of the recording, 
 log) holds the calibration of the pupil model and the validation. It is optional, on by default, and it needs to be
 there: the pupil adapts to the light during its long steps, and the session's 2-minute baseline follows it.
 
-**Calibration** (about 5 min): cwtool's *full calibration* sequence, ported exactly from the calibration presenter
-(`cwtool.calibration`): 34 full-field steps of 291 s, after a 5 s gray lead-in. The 8 grays of Eckert et al. (2022),
-longer the darker; red, green and blue at 64, 128, 191 and 255, each after its linked black step; two grays repeated.
-The order is the presenter's "scrambled, seeded by participant" (the preset order scrambled again with the
+**Calibration** (about 5 min): cwtool's *time-course calibration*, the calibration presenter's default from November
+2026, ported exactly (`cwtool.calibration.TIME_COURSE`): 30 full-field steps of 281 s, after a 5 s gray lead-in. Eight
+grays from 12 to 255, about 2.3 times apart in luminance and with no black (in the dark the pupil exceeded what the Varjo
+reports); dimming after moderate light (Gray 128 → 24, Gray 96 → 12) and after bright light (Gray 255 → 24, Blue 255 → 12),
+which separate the fast and the slow part of the pupil's dilation; red, green and blue at 128 and 255, each after a gray of
+the same luminance; two grays repeated; irregular lengths of 6 to 20 s. Each probe carries its context as a linked first
+step. The order is the presenter's "scrambled, seeded by participant" (the preset order scrambled again with the
 participant ID, no two consecutive levels next to each other in brightness), so the same ID gives the same order
-here, in the presenter and in `cwtool.calibration.scrambled(DEFAULT, id)`. The only spoken cue is the rest phrase at
+here, in the presenter and in `cwtool.calibration.scrambled(TIME_COURSE, id)`. The first run (P01, 10 November 2026) used
+the *full calibration* (34 steps, 291 s, with black steps; `CALIBRATION.design = "full"` regenerates it); why it was
+replaced is in cwtool's open issues 52 to 57. The only spoken cue is the rest phrase at
 the start ("keep your gaze on the point"). It is saved as `calibration_run_*.csv` in the presenter's run format. It
 comes first, with the participant fresh and nothing else to do. *Departure from the standalone presenter:* the
 fixation point is shown (it is in every condition of this tool), so gaze is steady and the calibration and the
@@ -69,7 +74,7 @@ validation are recorded the same way. It covers under 0.1 deg².
 | Block 4 to 6 | 2.5 min each | the three levels again, in another seeded order |
 | Final rest | 1 min | rest |
 
-In total that is 2 + 6 × (10 s + 2.5 min) + 5 × 20 s + 1 = 20.7 min, and with the 4 min 56 s calibration 25.6 min in
+In total that is 2 + 6 × (10 s + 2.5 min) + 5 × 20 s + 1 = 20.7 min, and with the 4 min 46 s calibration 25.4 min in
 the headset. There is no 0-back: the rests are the low-load reference, and the lowest task level is 1-back. Each load
 level gets 5 minutes over its two blocks: enough for time-domain HRV per level, and ultra-short measures (RMSSD and
 heart rate, 1–2.5 min) per block.
