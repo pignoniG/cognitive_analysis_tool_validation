@@ -55,12 +55,13 @@ export async function createVR({ emit }) {
   const sources = () => [...(session?.inputSources ?? [])].map((x) => ({ hand: x.handedness, ray: x.targetRayMode,
     profile: x.profiles?.[0] ?? null, gamepad: !!x.gamepad, buttons: x.gamepad?.buttons.length ?? 0 }));
   const bump = (map, key) => { map[key] = (map[key] ?? 0) + 1; };
+  /** Put what the session lists and counts now into the display's record (session.json) and tell the control page. */
+  const report = () => { display = { ...display, input: { ...input, sources: sources() } }; emit(state()); };
   const respond = (t, counter, hand) => {
     input[counter]++;
     bump(input.by_hand, `${hand || "?"} ${counter === "select_events" ? "select" : "gamepad"}`);
     if (t - lastPress >= 150) { lastPress = t; presenter.press(t); }
-    display = { ...display, input: { ...input, sources: sources() } };
-    emit(state());
+    report();
   };
   const pollTrigger = (t) => {
     for (const x of session?.inputSources ?? []) {
@@ -116,15 +117,13 @@ export async function createVR({ emit }) {
         const key = JSON.stringify([s.visibilityState, sources()]);
         if (key === seen) return;
         seen = key;
-        display = { ...display, input: { ...input, sources: sources() } };
-        emit(state());
+        report();
       }, 500);
       s.addEventListener("visibilitychange", () => presenter.note(`VR view: ${s.visibilityState}`));
       s.addEventListener("inputsourceschange", () => {
         const list = sources();
         presenter.note(`VR input sources: ${list.length ? list.map((x) => `${x.hand || "?"} ${x.profile ?? "no profile"}${x.gamepad ? "" : " (no gamepad)"}`).join("; ") : "none"}`);
-        display = { ...display, input: { ...input, sources: list } };
-        emit(state());
+        report();
       });
       s.addEventListener("end", () => {
         clearInterval(watch);

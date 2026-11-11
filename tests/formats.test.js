@@ -40,3 +40,20 @@ test("session folder names are safe", () => {
   assert.match(sessionFolder(" P 01/../x ", "vr", Date.now()), /^P-01-x_vr_\d{4}-\d\d-\d\d_\d\d-\d\d-\d\d$/);
   assert.match(sessionFolder("", "screen", Date.now()), /^anonymous_screen_/);
 });
+
+test("the headset line tells whether the trigger will register", async () => {
+  const { describeHeadset } = await import("../src/vrinput.js");
+  const none = describeHeadset({ frameRate: 90, visibility: "visible", input: { sources: [] } });
+  assert.ok(none.warn && none.text.includes("NO CONTROLLER") && none.text.startsWith("in the headset, 90 Hz"));
+  const input = { sources: [{ hand: "left" }, { hand: "right" }], select_events: 3, polled_edges: 3,
+    by_hand: { "left select": 3, "left gamepad": 3 }, buttons: { "left:0": 3, "right:1": 2 } };
+  const two = describeHeadset({ visibility: "visible", input }, true);
+  assert.equal(two.warn, false);
+  assert.ok(two.text.includes("2 controllers (left, right), trigger presses seen: 3 (+3 read from the gamepad)"));
+  assert.ok(two.text.includes("by hand: left select ×3, left gamepad ×3") && two.text.includes("buttons: left:0 ×3, right:1 ×2"));
+  // listed but silent while a session runs: a warning; before the session it is not one yet
+  const silent = { visibility: "visible-blurred", input: { sources: [{ hand: "right" }], select_events: 0, polled_edges: 0 } };
+  assert.equal(describeHeadset(silent, true).warn, true);
+  assert.equal(describeHeadset(silent, false).warn, false);
+  assert.ok(describeHeadset(silent).text.includes("1 controller (right)") && describeHeadset(silent).text.includes("hides the controllers"));
+});

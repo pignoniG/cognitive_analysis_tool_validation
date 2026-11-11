@@ -52,16 +52,26 @@ Each issue says where it is, why it matters, what the presenter currently does a
 - **Proposed:** regenerate only on purpose, before data collection starts, and record it.
 - **Status:** kept.
 
-### 5. VR mode not yet tried on the Varjo
+### 5. VR mode on the Varjo: one run, the responses and the frame rate are open
 - **Where:** `src/vr.js`, `src/presenter.js`.
-- **Problem:** the headset mode was written without a headset at hand. Untested: entering VR from Chrome or Edge with
-  Varjo Base; the head-locked field, target and fixation point (drawn at 1 m, so with a little binocular disparity);
-  the panorama turned to the head at each scene; the trigger as response; the frame rate and dropped frames at
-  90 Hz; pausing when the headset leaves VR.
-- **Now:** the same session engine as on the monitor, which is tested; only the WebXR shell is new.
-- **Proposed:** a dry session on the Varjo (a full 28 minutes, with a few pauses and a headset removal), checking
-  the files against the Varjo recording.
-- **Status:** needs data.
+- **Run (10 November 2026, P01, set A, Chrome on the Varjo computer, the page from the lab server):** the session completed
+  (25 min 36 s, no pauses), its 20 phases within 15 ms of the plan, 185 visual steps and 360 n-back items logged, saved through
+  the server. In cwtool the captured video shows the logged colours (Gray 73 as 72, Red 255 as 231) and the pupil follows the
+  calibration.
+- **Responses:** in that run 1 hit in 120 targets and no other press was received. Since then the control page shows the
+  controllers the browser lists and the presses it receives (and reads the trigger's gamepad button as well): both controllers
+  are listed, and only the left trigger registers. What the right trigger sends (another button, the squeeze event, nothing) has
+  not been read from the page yet.
+- **Frames:** the median frame took 11.2 ms (89 Hz), but 20 % took more than 1.5 times that (longest 68 ms; 73 Hz on average), so a
+  change of the picture can be a frame or more late. The session's frame rate was not reported by the browser. The 8192 × 4096
+  panoramas may be part of it.
+- **Timing against the headset:** the Varjo video shows each change 0.338 s before the logged onset (constant over the run);
+  cwtool measures it per recording and moves the log's clock (cwtool open issue 54).
+- **Not checked:** the head-locked field, target and fixation point by eye; the panorama turned to the head at each scene;
+  pausing when the headset leaves VR.
+- **Proposed:** read the control page's *buttons* line with the right trigger pressed; a run with responses; look at the dropped
+  frames with smaller panoramas.
+- **Status:** open (needs data).
 
 ### 6. Luminance of the natural scenes is not computed
 - **Where:** `src/geometry.js` (`stepLuminance`), `visual_log.csv`, `assets/scenes/manifest.json`.
@@ -94,17 +104,16 @@ Each issue says where it is, why it matters, what the presenter currently does a
 - **Proposed:** a switch to hide it during the calibration if the pupil fit shows a difference.
 - **Status:** kept.
 
-### 9. The Docker deployment is up, but no session has run through it yet
+### 9. The Docker deployment
 - **Where:** `Dockerfile`, `docker-compose.yml`, `docker-compose.proxy.yml`, `deploy/nginx-validation.conf`, `deploy/docker-compose.uc4-nginx.yml`.
-- **Problem:** on 2026-10-28 the image was built and runs healthy on the server (`/healthz` answers), and the UC4 nginx
-  forwards `/validation/` to it (the password prompt answers 401, the UC4 site is unchanged). Since then it has an
-  address of its own, `https://validation.137-204-97-86.sslip.io/`, through a front nginx in `/srv/edge` with an
-  automatically renewed certificate (the root address works: the page uses only relative addresses). Not yet tried: a session through that address (files in the data folder, the *Clock* line, the headset's
-  WebXR over HTTPS). The old `/validation/` route can be retired when everyone uses the new address; the task does not
-  depend on UC4's nginx any more.
-- **Now:** documented in `docs/deploying.md`.
-- **Proposed:** run a short dry session through the address and check the data folder; retire the UC4 route (optional) and, if wanted, an automatic redeploy from GitHub in the style of the other services.
-- **Status:** needs data.
+- **Now:** the image runs on the lab server at `https://validation.137-204-97-86.sslip.io/`, through a front nginx in `/srv/edge`
+  with an automatically renewed certificate (`docs/deploying.md`). The first VR run (10 November 2026) was served from it, in
+  WebXR over HTTPS, and saved through it (`saving: server`, with `clock_offset.csv`).
+- **Open:** a new version reaches the server only by hand (`git pull`, then `docker compose up -d --build`); the old `/validation/`
+  route through the UC4 nginx can be retired.
+- **Proposed:** an automatic redeploy from GitHub in the style of the server's other services, skipped while a session is
+  being saved.
+- **Status:** open (the redeploy).
 
 ### 10. The clock offset covers the server and the page, not the other devices
 - **Where:** `src/clock.js`, `clock_offset.csv`.
@@ -113,6 +122,10 @@ Each issue says where it is, why it matters, what the presenter currently does a
   their offsets are not measured here. The server is also only a reference: a server clock that itself drifts or is
   wrong says nothing about the participant's data.
 - **Now:** the offset is recorded, not applied; the convention is `server = logged + offset`.
+- **First run (10 November 2026):** the server was 1.8 ms ahead of the page at the start and 15.5 ms at the end
+  (0.54 ms per minute, round trips of about 5 ms). `page_vs_wall_ms` rose to 14 ms over the same time, so the drift is the
+  browser's own clock against the computer's wall clock, not the server's; the server and the wall clock agree within 3 ms.
+  It does not explain the 0.338 s between the log and the Varjo video (issue 5).
 - **Proposed:** none needed unless the server's clock becomes the reference for several machines.
 - **Status:** kept.
 

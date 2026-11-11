@@ -97,7 +97,10 @@ is no second window.
 5. **Start session** once the headset is on the participant and they are looking ahead. Everything except natural
    scenes moves with the head: the field, the target and the fixation point are locked to the headset. A panorama
    stays fixed in the room, turned so that its view direction is ahead of the participant when the scene starts.
-6. **Responses:** the controller's trigger. A clicker or key presses on this page work too.
+6. **Responses:** the controller's trigger. A clicker or key presses on this page work too. Before starting, press the
+   trigger and read the *Stimulus window* line: it lists the controllers the browser sees and counts the presses it
+   receives, by hand and by button; "NO CONTROLLER" or a count that does not move means the trigger will not register (on the
+   first run only the left trigger did, open issue 5).
 7. If the headset's session ends during the run (the headset taken off, the Varjo runtime restarting), the session
    **pauses**. Enter VR again, then Resume. The exit is noted in `session.json`.
 

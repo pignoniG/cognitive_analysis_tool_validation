@@ -10,6 +10,7 @@ import { makePlan, describePlan, renderPreview, mmss, TYPE_NAMES } from "./previ
 import { RESPONSE_KEYS } from "./task.js";
 import { PracticeRun } from "./practice.js";
 import { createVR, vrSupported } from "./vr.js";
+import { describeHeadset } from "./vrinput.js";
 
 const $ = (s) => document.querySelector(s);
 const ORIGIN = location.origin;
@@ -132,14 +133,8 @@ function showVR() {
   if (mode !== "vr") return;
   if (!vr) return;
   if (vrState?.presenting) {
-    const inp = vrState.input, n = inp?.sources.length ?? 0;
-    const seen = (inp?.select_events ?? 0) + (inp?.polled_edges ?? 0);
-    const ctl = n ? `${n} controller${n === 1 ? "" : "s"} (${inp.sources.map((x) => x.hand || "?").join(", ")}), trigger presses seen: ${inp.select_events}${inp.polled_edges ? ` (+${inp.polled_edges} read from the gamepad)` : ""}` +
-      `${Object.keys(inp.by_hand ?? {}).length ? `; by hand: ${Object.entries(inp.by_hand).map(([k, v]) => `${k} ×${v}`).join(", ")}` : ""}` +
-      `${Object.keys(inp.buttons ?? {}).length ? `; buttons: ${Object.entries(inp.buttons).map(([k, v]) => `${k} ×${v}`).join(", ")}` : ""}`
-      : `NO CONTROLLER listed by the headset session (view: ${vrState.visibility ?? "unknown"}): the trigger will not register; use the keyboard clicker`;
-    const blurred = vrState.visibility && vrState.visibility !== "visible" ? ` [view: ${vrState.visibility}: the browser hides the controllers]` : "";
-    setLive("#live-window", `in the headset${vrState.frameRate ? `, ${vrState.frameRate} Hz` : ""}; ${ctl}${blurred}`, !n || (state === "running" && !seen));
+    const { text, warn } = describeHeadset(vrState, state === "running");
+    setLive("#live-window", text, warn);
   }
   else setLive("#live-window", state === "paused" ? "left VR: the session is paused; Enter VR, then Resume" : "headset ready: press Enter VR, then put it on the participant", true);
 }
