@@ -129,3 +129,17 @@ Each issue says where it is, why it matters, what the presenter currently does a
 - **Proposed:** none needed unless the server's clock becomes the reference for several machines.
 - **Status:** kept.
 
+
+### 11. A Quest 3 over Link does not show the WebXR Layers path
+- **Where:** `src/xrcompat.js`, `src/vr.js`, the *Compatible rendering* box of the control page.
+- **Problem (13 November 2026):** reported for cwtool's calibration presenter, which starts VR as this page does: with a
+  Quest 3 over Link (cable) in Chrome on Windows the headset stayed dark ("this page is not responding") while the run went
+  on and saved a complete file. three.js draws into a WebXR Layers projection layer when the browser offers one; removing
+  `XRWebGLBinding.prototype.createProjectionLayer` made the picture appear (cwtool open issue 59).
+- **Now:** the function is hidden while three.js starts the session, so the classic `XRWebGLLayer` is used, unless
+  *Compatible rendering* is switched off. `session.json` (`display.render_path`, `display.view`) and the control page name
+  the layer and count the frames in which the view was not visible or had no head pose.
+- **Open:** not run on the Varjo XR-4 with the classic layer (the 10 November run used the projection layer); not run on a
+  Quest at all; the warning may not fire in the failing setup, where the frames kept arriving.
+- **Proposed:** a short run on the Varjo before the next recordings, comparing the dropped frames with the first run.
+- **Status:** open (needs the Varjo test).

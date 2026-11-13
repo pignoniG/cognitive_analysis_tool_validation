@@ -145,6 +145,7 @@ td.warn { color: var(--danger); font-weight: 600; }
     <button id="btn-start" class="primary" disabled>Start session</button>
     <button id="btn-pause" disabled>Pause</button>
     <button id="btn-abort" class="danger" disabled>Abort</button>
+    <label class="check" data-mode="vr" title="Draw into the classic WebXR layer (XRWebGLLayer), which every runtime shows. Off: the WebXR Layers projection layer, which a Quest over Link in Chrome does not show. Takes effect when VR is entered."><input type="checkbox" id="xr-compatible" checked> Compatible rendering</label>
   </div>
   <div class="bar" aria-hidden="true"><i id="progress"></i></div>
   <dl class="live">

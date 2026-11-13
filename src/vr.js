@@ -9,6 +9,7 @@
 import { configureRenderer } from "./stage.js";
 import { rad } from "./geometry.js";
 import { Presenter } from "./presenter.js";
+import { setSession, viewCounter } from "./xrcompat.js";
 
 export const VR_DISPLAY = { vfov: 105, aspect: Math.tan(rad(60)) / Math.tan(rad(52.5)), field_deg: [120, 105],
   source: "cwtool Varjo XR-4 profile" };
@@ -52,11 +53,16 @@ export async function createVR({ emit }) {
   const input = { select_events: 0, polled_edges: 0, by_hand: {}, buttons: {}, sources: [] };
   const held = new WeakMap();                                         // input source -> which buttons were down
   let lastPress = -Infinity;
+  // which layer three.js draws into (xrcompat.js), and what the session says about the view, frame by frame
+  let renderPath = null, view = viewCounter();
   const sources = () => [...(session?.inputSources ?? [])].map((x) => ({ hand: x.handedness, ray: x.targetRayMode,
     profile: x.profiles?.[0] ?? null, gamepad: !!x.gamepad, buttons: x.gamepad?.buttons.length ?? 0 }));
   const bump = (map, key) => { map[key] = (map[key] ?? 0) + 1; };
   /** Put what the session lists and counts now into the display's record (session.json) and tell the control page. */
-  const report = () => { display = { ...display, input: { ...input, sources: sources() } }; emit(state()); };
+  const report = () => {
+    display = { ...display, input: { ...input, sources: sources() }, view: { ...view.counts, unseen: view.unseen } };
+    emit(state());
+  };
   const respond = (t, counter, hand) => {
     input[counter]++;
     bump(input.by_hand, `${hand || "?"} ${counter === "select_events" ? "select" : "gamepad"}`);
@@ -80,12 +86,16 @@ export async function createVR({ emit }) {
   // still takes effect with the headset off. Head-locked parts hang from the camera, so the camera takes this
   // frame's head pose before rendering (three.js would otherwise update it after the scene, a frame late).
   renderer.setAnimationLoop((t) => {
-    if (renderer.xr.isPresenting) { renderer.xr.updateCamera(camera); pollTrigger(t); }
+    if (renderer.xr.isPresenting) {
+      renderer.xr.updateCamera(camera); pollTrigger(t);
+      view.frame(session, renderer.xr.getFrame(), renderer.xr.getReferenceSpace());
+    }
     presenter.frame(t);
     if (renderer.xr.isPresenting) renderer.render(presenter.stage.scene, camera);
   });
 
   const state = () => ({ type: "vr", presenting: !!session, frameRate: session?.frameRate ?? null,
+    renderPath, view: { ...view.counts, unseen: view.unseen },
     blend: session?.environmentBlendMode ?? null, visibility: session?.visibilityState ?? null,
     input: { ...input, sources: sources() } });
 
@@ -93,20 +103,21 @@ export async function createVR({ emit }) {
     presenter,
     get presenting() { return !!session; },
     /** Call from the click that enters VR: the session request needs its user activation. */
-    async enter() {
+    async enter({ compatible = true } = {}) {
       if (session) return;
       const request = navigator.xr.requestSession("immersive-vr", { optionalFeatures: ["local"] });
       presenter.unlockAudio();
       const s = await request;
       try {
         if (!gl.getContextAttributes()?.xrCompatible && gl.makeXRCompatible) await gl.makeXRCompatible();
-        await renderer.xr.setSession(s);
+        renderPath = await setSession(renderer.xr, s, compatible);
       } catch (e) {
         s.end().catch(() => {});
         throw new Error(`${e.message} The browser must run on the graphics card the headset is connected to.`);
       }
       session = s;
-      display = { ...VR_DISPLAY, presenting: true, frame_rate_hz: s.frameRate ?? null,
+      view = viewCounter();
+      display = { ...VR_DISPLAY, presenting: true, frame_rate_hz: s.frameRate ?? null, render_path: renderPath,
         supported_frame_rates: s.supportedFrameRates ? [...s.supportedFrameRates] : null, input: { ...input, sources: sources() } };
       s.addEventListener("selectstart", (e) => respond(e.timeStamp, "select_events", e.inputSource?.handedness));
       s.addEventListener("squeezestart", (e) => { bump(input.by_hand, `${e.inputSource?.handedness || "?"} squeeze`); emit(state()); });
@@ -114,11 +125,12 @@ export async function createVR({ emit }) {
       // exists, or hide them while the view is "visible-blurred"; the control page must show what the session says now.
       let seen = "";
       const watch = setInterval(() => {
-        const key = JSON.stringify([s.visibilityState, sources()]);
+        const key = JSON.stringify([s.visibilityState, sources(), view.unseen]);
         if (key === seen) return;
         seen = key;
         report();
       }, 500);
+      presenter.note(`VR picture drawn into: ${renderPath}`);
       s.addEventListener("visibilitychange", () => presenter.note(`VR view: ${s.visibilityState}`));
       s.addEventListener("inputsourceschange", () => {
         const list = sources();

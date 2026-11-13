@@ -10,7 +10,12 @@ const counts = (map) => Object.entries(map ?? {}).map(([k, v]) => `${k} ×${v}`)
 export function describeHeadset(vr, running = false) {
   const input = vr.input ?? {}, sources = input.sources ?? [];
   const select = input.select_events ?? 0, polled = input.polled_edges ?? 0;
-  const head = `in the headset${vr.frameRate ? `, ${vr.frameRate} Hz` : ""}`;
+  const head = `in the headset${vr.frameRate ? `, ${vr.frameRate} Hz` : ""}${vr.renderPath ? `, ${vr.renderPath}` : ""}`;
+  if (vr.view?.unseen) {
+    const share = (n) => `${Math.round(100 * n / vr.view.frames)} %`;
+    return { text: `${head}; THE HEADSET MAY NOT BE SHOWING THE PICTURE: view not visible in ${share(vr.view.not_visible)} of the frames, ` +
+      `no head pose in ${share(vr.view.no_pose)}. Ask the participant what they see before starting`, warn: true };
+  }
   if (!sources.length) {
     return { text: `${head}; NO CONTROLLER listed by the headset session (view: ${vr.visibility ?? "unknown"}): the trigger will not register; use the keyboard clicker`, warn: true };
   }

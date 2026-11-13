@@ -310,7 +310,7 @@ time (ms), which is how the recordings of the eye tracker and the physiology log
 | `<date>_event_log.csv` | cwtool's `event_log` format (`Event, Start Time, End Time, Duration (s), Start (unix s), End (unix s)`), one row per **load** phase: `Calibration`, `Baseline`, `Instruction`, `1-back` … `3-back`, `Rest`, `Final rest`. Copy it into the recording folder and cwtool shades and averages ΔPD per load level. |
 | `visual_log.csv` | One row per visual **step**. The same six columns first (Event = condition), then segment, condition, step, background RGB, target RGB, target diameter (°), scene, nominal Y of the gaze circle and of the whole field, cd/m² (with a profile), and the frame onset. |
 | `nback_log.csv` | One row per item heard: block, n, item, digit, target, lure, the 0-back target digit, onset (Unix ms), response (Unix ms), RT (ms), outcome, extra presses, interrupted. |
-| `session.json` | Participant, mode, language, seed and generator attempt, app version, screen geometry, display profile, frame statistics (mean frame time, dropped frames), audio output latency, browser. |
+| `session.json` | Participant, mode, language, seed and generator attempt, app version, screen geometry, display profile, frame statistics (mean frame time, dropped frames), in VR the layer the picture was drawn into and the frames whose view was not visible or had no head pose, audio output latency, browser. |
 | `calibration_run_*.csv` | When the calibration was played: the calibration presenter's run format, unchanged. |
 | `practice_nback_log.csv` | The practice (a separate folder, `<participant>_practice_<date>/`), in the n-back format. |
 

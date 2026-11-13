@@ -94,6 +94,11 @@ is no second window.
 3. **Set up** as on a monitor (participant, language) and check the plan.
 4. **Enter VR.** The headset shows the gray field and the fixation point. The click also lets the page play sound;
    the participant's headphones must be on this computer's audio output.
+   *Compatible rendering* (on by default) draws into the classic WebXR layer, which every runtime shows; off, the
+   picture goes through a WebXR Layers projection layer, which a Quest 3 over Link in Chrome leaves dark while the
+   session runs on. The *Stimulus window* line names the layer in use, and warns when the headset's session reports a
+   view that is not visible or has no head pose for most frames. The page cannot see what the headset shows: with a
+   new headset or browser, ask the participant what they see before starting.
 5. **Start session** once the headset is on the participant and they are looking ahead. Everything except natural
    scenes moves with the head: the field, the target and the fixation point are locked to the headset. A panorama
    stays fixed in the room, turned so that its view direction is ahead of the participant when the scene starts.

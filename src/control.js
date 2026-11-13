@@ -105,7 +105,7 @@ async function openStimulus() {
 async function enterVR() {
   if (!vr) return;
   try {
-    await vr.enter();
+    await vr.enter({ compatible: $("#xr-compatible").checked });
   } catch (e) {
     setLive("#live-window", `could not enter VR: ${e.message || e}`, true);
   }
@@ -366,6 +366,11 @@ for (const id of SETUP_INPUTS) {
 }
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => plan && renderPreview(plan, { onStep: previewStep }));
 serverAvailable().then((ok) => setLive("#live-saving", ok ? "to disk through server.py" : savingMemoryText(), !ok));
+{
+  const saved = store.get("xr-compatible");                       // on unless it was switched off here before
+  if (saved !== null) $("#xr-compatible").checked = saved === "1";
+  $("#xr-compatible").addEventListener("input", () => store.set("xr-compatible", $("#xr-compatible").checked ? "1" : "0"));
+}
 if (mode === "vr") prepareVR();
 build();
 

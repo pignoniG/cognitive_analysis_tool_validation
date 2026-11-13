@@ -57,3 +57,46 @@ test("the headset line tells whether the trigger will register", async () => {
   assert.equal(describeHeadset(silent, false).warn, false);
   assert.ok(describeHeadset(silent).text.includes("1 controller (right)") && describeHeadset(silent).text.includes("hides the controllers"));
 });
+
+test("the headset's session starts on the classic layer unless asked otherwise, and the function is put back", async () => {
+  const { setSession, renderPath, PATH_CLASSIC, PATH_LAYERS } = await import("../src/xrcompat.js");
+  class XRWebGLLayer {}
+  class XRWebGLBinding { createProjectionLayer() { return {}; } }
+  const scope = { XRWebGLLayer, XRWebGLBinding };
+  // three.js's choice: the projection layer when the browser offers it at the moment the session starts
+  const xr = { layer: null, getBaseLayer() { return this.layer; },
+    async setSession() { this.layer = "createProjectionLayer" in XRWebGLBinding.prototype ? {} : new XRWebGLLayer(); } };
+  assert.equal(await setSession(xr, {}, true, scope), PATH_CLASSIC);
+  assert.ok("createProjectionLayer" in XRWebGLBinding.prototype);            // put back
+  assert.equal(await setSession(xr, {}, false, scope), PATH_LAYERS);
+  // put back when the session fails to start, too
+  const failing = { getBaseLayer: () => null, async setSession() { throw new Error("no"); } };
+  await assert.rejects(setSession(failing, {}, true, scope));
+  assert.ok("createProjectionLayer" in XRWebGLBinding.prototype);
+  assert.equal(renderPath(failing, scope), "unknown");
+  // a browser without WebXR Layers has nothing to hide, and the session starts all the same
+  const plain = { layer: null, getBaseLayer() { return this.layer; }, async setSession() { this.layer = new XRWebGLLayer(); } };
+  assert.equal(await setSession(plain, {}, true, { XRWebGLLayer }), PATH_CLASSIC);
+});
+
+test("a view the session does not show is counted and named on the control page", async () => {
+  const { viewCounter } = await import("../src/xrcompat.js");
+  const { describeHeadset } = await import("../src/vrinput.js");
+  const pose = { views: [{}, {}] }, frame = { getViewerPose: () => pose }, space = {};
+  const seen = viewCounter();
+  for (let i = 0; i < 200; i++) seen.frame({ visibilityState: "visible" }, frame, space);
+  assert.deepEqual(seen.counts, { frames: 200, not_visible: 0, no_pose: 0 });
+  assert.equal(seen.unseen, false);
+  const hidden = viewCounter();
+  for (let i = 0; i < 30; i++) hidden.frame({ visibilityState: "hidden" }, { getViewerPose: () => null }, space);
+  assert.equal(hidden.unseen, false);                                          // too few frames to say
+  for (let i = 0; i < 170; i++) hidden.frame({ visibilityState: "hidden" }, { getViewerPose: () => null }, space);
+  assert.equal(hidden.unseen, true);
+  const input = { sources: [{ hand: "left" }], select_events: 2 };
+  const line = describeHeadset({ frameRate: 90, renderPath: "XRWebGLLayer", visibility: "hidden", input,
+    view: { ...hidden.counts, unseen: true } }, true);
+  assert.ok(line.warn && /MAY NOT BE SHOWING/.test(line.text) && /100 %/.test(line.text));
+  const fine = describeHeadset({ frameRate: 90, renderPath: "XRWebGLLayer", visibility: "visible", input,
+    view: { ...seen.counts, unseen: false } }, true);
+  assert.ok(!fine.warn && /XRWebGLLayer/.test(fine.text));
+});
