@@ -97,3 +97,12 @@ export const VISUAL = {
 };
 
 export const FIXATION = { diameter: 0.3, outline: 0.08, fill: [128, 128, 128], stroke: [0, 0, 0] };
+// The gaze check at the end of the calibration (as the calibration presenter's): the fixation point, larger and with a
+// white centre, through 9 places on the lead-in gray, the centre first; a place is a direction from the eye, at most
+// azDeg × elDeg at the grid's edges (less on a monitor too small for it). The run file logs each place, so cwtool can
+// check that the gaze lands on it in the video and propose an offset.
+export const GAZE_CHECK = {
+  on: true,
+  points: [[0, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]],   // u right, v down
+  seconds: 2, azDeg: 15, elDeg: 12, diameter: 1.6, centre: [255, 255, 255], displayShare: 0.4,
+};

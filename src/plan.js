@@ -11,7 +11,7 @@ import { preTimeline } from "./prelude.js";
  *  `{ calibration }` (on by default) and `{ set }`, the visual set (A or B). */
 export function makePlan(participant, maxDiameter = Infinity, options = {}) {
   const opts = { calibration: options.calibration ?? true, set: options.set ?? VISUAL.defaultSet };
-  const pre = preTimeline(participant, opts);
+  const pre = preTimeline(participant, { ...opts, maxDiameter });
   const off = pre.duration;
   const loadPhases = loadTimeline(participant);
   const visual = visualTimeline(participant, loadPhases, { maxDiameter, set: opts.set });

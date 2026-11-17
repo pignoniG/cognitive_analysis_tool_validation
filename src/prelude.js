@@ -6,17 +6,24 @@
 // The n-back practice is not part of the recording: it is a separate part of the page (practice.js), done before the
 // headset goes on or the participant sits at the monitor. Its plan is built here.
 
-import { CALIBRATION, PRACTICE, NBACK } from "./config.js";
+import { CALIBRATION, GAZE_CHECK, PRACTICE, NBACK } from "./config.js";
 import { calibrationSteps, calibrationLength } from "./calibration.js";
 import { nbackBlock } from "./nback.js";
 import { gray } from "./colour.js";
 
+/** The gaze check's places for a display whose height is `maxDiameter` (°; Infinity in the headset): `{ u, v, az, el }`
+ *  (deg; right, up), the grid shrunk to `displayShare` of the display's height when it would not fit. */
+export function gazePlaces(maxDiameter = Infinity, gc = GAZE_CHECK) {
+  const k = Number.isFinite(maxDiameter) ? Math.min(1, (gc.displayShare * maxDiameter) / gc.elDeg) : 1;
+  return gc.points.map(([u, v]) => ({ u, v, az: u * gc.azDeg * k, el: -v * gc.elDeg * k }));
+}
+
 /**
  * `{ phases, steps, calibration, duration }` for `participant`, times in s from the start of the recording.
- * `steps` are visual steps in the visual timeline's shape (segment 0, type "calibration"). `options`:
- * `{ calibration }`.
+ * `steps` are visual steps in the visual timeline's shape (segment 0, type "calibration"); the gaze check's steps are
+ * calibration steps too, with a `gaze` place. `options`: `{ calibration, maxDiameter }`.
  */
-export function preTimeline(participant, { calibration = true } = {}, cc = CALIBRATION) {
+export function preTimeline(participant, { calibration = true, maxDiameter = Infinity } = {}, cc = CALIBRATION, gc = GAZE_CHECK) {
   const phases = [], steps = [];
   let t = 0, calibrationInfo = null;
   const phase = (label, kind, duration, extra = {}) => { phases.push({ label, kind, start: t, duration, ...extra }); };
@@ -26,7 +33,8 @@ export function preTimeline(participant, { calibration = true } = {}, cc = CALIB
 
   if (calibration) {
     const played = calibrationSteps(participant, cc);
-    const duration = cc.leadIn + calibrationLength(played);
+    const places = gc.on ? gazePlaces(maxDiameter, gc) : [];
+    const duration = cc.leadIn + calibrationLength(played) + places.length * gc.seconds;
     phase("Calibration", "calibration", duration);
     step(1, "calibration", cc.leadIn, gray(cc.leadGray), { colour: "Lead-in" });
     let at = t + cc.leadIn;
@@ -35,7 +43,14 @@ export function preTimeline(participant, { calibration = true } = {}, cc = CALIB
         target: null, colour: st.label, scene: null, change: "step", source: st.source, linked: st.linked });
       at += st.seconds;
     });
-    calibrationInfo = { steps: played, leadIn: cc.leadIn, leadGray: cc.leadGray, start: t, duration, firstStepStart: t + cc.leadIn };
+    places.forEach((gaze, k) => {
+      steps.push({ segment: 0, step: played.length + k + 2, type: "calibration", variant: null, start: at, duration: gc.seconds,
+        field: gray(cc.leadGray), target: null, colour: `Gaze target ${k + 1}`, scene: null, change: "gaze", source: -1, linked: false,
+        gaze });
+      at += gc.seconds;
+    });
+    calibrationInfo = { steps: played, gaze: places, gazeSeconds: gc.seconds, leadIn: cc.leadIn, leadGray: cc.leadGray, start: t,
+      duration, firstStepStart: t + cc.leadIn };
     t += duration;
   }
 

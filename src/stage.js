@@ -7,7 +7,7 @@
 // the monitor (`flat`) it is a rectilinear crop of the panorama, a flat picture one unit ahead of the fixed camera,
 // sized by its field of view: the same pixels per degree as the source, and no sphere to resample.
 
-import { FIXATION } from "./config.js";
+import { FIXATION, GAZE_CHECK } from "./config.js";
 import { rad } from "./geometry.js";
 import { rngFrom } from "./rng.js";
 
@@ -55,6 +55,12 @@ export function createStage(THREE, renderer, { scenes = {}, flat = false } = {})
   const outline = layer(new THREE.Mesh(new THREE.RingGeometry(r0, r1, 64), outlineMat), 3, camera);
   const dot = layer(new THREE.Mesh(new THREE.CircleGeometry(r0, 64), dotMat), 4, camera);
   outline.position.z = dot.position.z = -1;
+  // The gaze check moves the fixation point to a direction (az, el) on the plane one unit ahead, larger and with a white centre.
+  const placeFixation = (gaze) => {
+    const az = rad(gaze?.az ?? 0), el = rad(gaze?.el ?? 0), k = gaze ? GAZE_CHECK.diameter / FIXATION.diameter : 1;
+    for (const m of [outline, dot]) { m.position.set(Math.tan(az), Math.tan(el) / Math.cos(az), -1); m.scale.set(k, k, 1); }
+    setColour(dotMat, gaze ? GAZE_CHECK.centre : FIXATION.fill);
+  };
 
   const textures = new Map();
   const textureFor = (id) => {
@@ -110,6 +116,7 @@ export function createStage(THREE, renderer, { scenes = {}, flat = false } = {})
         field.visible = true;
         pano.visible = false;
       }
+      placeFixation(step.gaze ?? null);
       target.visible = !!step.target;
       if (step.target) {
         setColour(targetMat, step.target.rgb);

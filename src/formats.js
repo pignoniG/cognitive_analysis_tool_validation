@@ -80,7 +80,8 @@ export function eventLogName(unixMs) {
 
 /** The columns of the calibration presenter's run file (docs/calibration-tool of cwtool). */
 export const CALIBRATION_RUN_COLUMNS = ["time", "duration", "r", "g", "b", "label", "index", "source_index", "planned_start_s",
-  "planned_duration_s", "onset_unix_ms", "Y", "completed"];
+  "planned_duration_s", "onset_unix_ms", "Y", "completed", "phase", "target_u", "target_v", "target_x", "target_y", "target_az_deg",
+  "target_el_deg"];
 
 const round = (v, n = 4) => Math.round(v * 10 ** n) / 10 ** n;
 
@@ -94,7 +95,8 @@ export function calibrationRunCsv(meta, rows) {
   lines.push(csvRow(CALIBRATION_RUN_COLUMNS));
   for (const r of rows) {
     lines.push(csvRow([round(r.time), round(r.duration), r.rgb[0], r.rgb[1], r.rgb[2], r.label, r.index, r.source_index,
-      round(r.planned_start_s), round(r.planned_duration_s), r.onset_unix_ms.toFixed(3), r.Y.toFixed(5), r.completed]));
+      round(r.planned_start_s), round(r.planned_duration_s), r.onset_unix_ms.toFixed(3), r.Y.toFixed(5), r.completed,
+      r.gaze ? "gaze" : "light", r.gaze?.u ?? "", r.gaze?.v ?? "", "", "", r.gaze ? round(r.gaze.az) : "", r.gaze ? round(r.gaze.el) : ""]));
   }
   return lines.join("");
 }
