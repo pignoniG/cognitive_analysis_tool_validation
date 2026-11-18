@@ -70,6 +70,21 @@ export class AudioCues {
     osc.stop(t + 0.25);
   }
 
+  /** The gaze check's cue: a short tone, now. False when the audio is not running (no click in the page yet). */
+  cue({ hz = 880, length = 0.2 } = {}) {
+    if (!this.running) return false;
+    const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), t = this.ctx.currentTime + 0.005;
+    osc.frequency.value = hz;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.4, t + 0.01);
+    gain.gain.setValueAtTime(0.4, t + length - 0.03);
+    gain.gain.linearRampToValueAtTime(0, t + length);
+    osc.connect(gain).connect(this.ctx.destination);
+    osc.start(t);
+    osc.stop(t + length + 0.01);
+    return true;
+  }
+
   stop(handle) { try { handle.source.stop(); } catch { /* already ended */ } this.sources.delete(handle.source); }
   stopAll() { for (const s of this.sources) { try { s.stop(); } catch { /* ended */ } } this.sources.clear(); }
 

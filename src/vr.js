@@ -27,9 +27,10 @@ export async function createVR({ emit }) {
   // The GL context must be XR-compatible from the start: making it so afterwards makes the browser recreate it
   // (context lost and restored), which invalidates the session's layer (a black headset). As in the calibration tool.
   const canvas = document.createElement("canvas");
-  const gl = canvas.getContext("webgl2", { antialias: false, alpha: false, xrCompatible: true });
+  // Multisampled, so the fixation point and the gaze check's point have smooth edges (a full field has none).
+  const gl = canvas.getContext("webgl2", { antialias: true, alpha: false, xrCompatible: true });
   if (!gl) throw new Error("WebGL 2 is not available.");
-  const renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: false });
+  const renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: true });
   configureRenderer(THREE, renderer);
   renderer.xr.enabled = true;
   renderer.xr.setReferenceSpaceType("local");

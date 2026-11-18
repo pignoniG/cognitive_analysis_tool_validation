@@ -56,20 +56,20 @@ test("the full calibration of the first runs is still there, in cwtool's order",
 
 test("a plan puts the calibration before the session, on one clock", () => {
   const plan = makePlan("P01");
-  const gaze = GAZE_CHECK.points.length * GAZE_CHECK.seconds;          // the gaze check closes the calibration: 18 s
+  const gaze = GAZE_CHECK.cueSeconds + GAZE_CHECK.points.length * GAZE_CHECK.seconds;   // the gaze check closes the calibration: 1 + 27 s
   assert.equal(plan.pre.duration, CALIBRATION.leadIn + 281 + gaze);
   assert.equal(plan.phases[0].kind, "calibration");
   assert.equal(plan.phases[1].kind, "baseline");
-  assert.equal(plan.phases[1].start, 304);
+  assert.equal(plan.phases[1].start, 314);
   let t = 0;
   for (const p of plan.phases) { assert.ok(Math.abs(p.start - t) < 1e-9, `${p.label} starts at ${p.start}, expected ${t}`); t += p.duration; }
-  assert.equal(t, 304 + 1240);                      // 25:44
+  assert.equal(t, 314 + 1240);                      // 25:54
   // the visual steps cover the recording without gaps or overlaps, and the real ones start after the calibration
   let s = 0;
   for (const st of plan.visual.steps) { assert.ok(Math.abs(st.start - s) < 0.06, `${st.type} step at ${st.start}, expected ${s}`); s = st.start + st.duration; }
   assert.ok(Math.abs(s - t) < 0.06);
   assert.ok(plan.visual.segments.every((g) => g.start >= plan.pre.duration));
-  assert.equal(plan.visual.pre.filter((x) => x.type === "calibration").length, 40);   // the lead-in, 30 steps, 9 gaze targets
+  assert.equal(plan.visual.pre.filter((x) => x.type === "calibration").length, 41);   // the lead-in, 30 steps, the cue, 9 gaze targets
   const targets = plan.visual.pre.filter((x) => x.gaze);
   assert.deepEqual(targets.map((x) => [x.gaze.u, x.gaze.v]), GAZE_CHECK.points);
   assert.ok(targets.every((x) => x.field.every((c) => c === CALIBRATION.leadGray) && x.duration === GAZE_CHECK.seconds));
@@ -152,7 +152,7 @@ test("a full recording: calibration, then the session; the calibration run file 
   const cal = new CalibrationRun(plan.pre.calibration, { participant: "P01", mode: "screen", runId: "t", tool: "test" }, { time_zone: "UTC" });
   const { run, task, sink } = simulate(plan, { onStepClosed: (st, a, b, why) => { cal.step(st, a, b, why); } });
   assert.equal(run.summary.status, "completed");
-  assert.ok(Math.abs(run.summary.session_s - 1544) < 0.05);
+  assert.ok(Math.abs(run.summary.session_s - 1554) < 0.05);
 
   const ev = sink.files.get("ev.csv").trim().split("\n").map((l) => l.split(","));
   assert.deepEqual(ev.slice(1, 4).map((r) => r[0]), ["Calibration", "Baseline", "Instruction"]);
@@ -165,7 +165,7 @@ test("a full recording: calibration, then the session; the calibration run file 
   assert.ok(meta.some((l) => l.startsWith("# sequence_start_unix_ms: ")));
   const table = lines.filter((l) => !l.startsWith("# ")).map((l) => l.split(","));
   assert.deepEqual(table[0], CALIBRATION_RUN_COLUMNS);
-  assert.equal(table.length - 1, 39);                                 // 30 light steps, then 9 gaze targets
+  assert.equal(table.length - 1, 40);                                 // 30 light steps, the cue, then 9 gaze targets
   assert.equal(table[1][0], "0");
   assert.equal(table[1][6], "1");                                     // index
   assert.equal(table[1][7], "27");                                    // source_index (P01 starts with preset step 27)
@@ -176,10 +176,14 @@ test("a full recording: calibration, then the session; the calibration run file 
   assert.equal(light.length, 30);
   const durations = light.reduce((n, r) => n + Number(r[1]), 0);
   assert.ok(Math.abs(durations - 281) < 0.1, `${durations}`);
-  assert.deepEqual(gazeRows.map((r) => [r[14], r[15]].map(Number)), GAZE_CHECK.points);
-  assert.ok(gazeRows.every((r) => r[7] === "" && r[5].startsWith("Gaze target")));
-  assert.deepEqual(gazeRows[1].slice(18).map(Number), [-15, 12]);     // up and to the left: az, el
+  const [cueRow, ...placeRows] = gazeRows;                             // the tone first, with no place
+  assert.equal(cueRow[5], "Gaze check cue (tone)");
+  assert.deepEqual(cueRow.slice(14), ["", "", "", "", "", ""]);
+  assert.deepEqual(placeRows.map((r) => [r[14], r[15]].map(Number)), GAZE_CHECK.points);
+  assert.ok(placeRows.every((r) => r[7] === "" && r[5].startsWith("Gaze target")));
+  assert.deepEqual(placeRows[1].slice(18).map(Number), [-15, 12]);     // up and to the left: az, el
   assert.ok(meta.includes("# gaze_check: true"));
+  assert.ok(meta.some((l) => l.startsWith("# gaze_cue: 880 Hz tone")));
 });
 
 test("the practice run: its own log, scores and a feedback tone on every press", () => {

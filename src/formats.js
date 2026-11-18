@@ -96,7 +96,7 @@ export function calibrationRunCsv(meta, rows) {
   for (const r of rows) {
     lines.push(csvRow([round(r.time), round(r.duration), r.rgb[0], r.rgb[1], r.rgb[2], r.label, r.index, r.source_index,
       round(r.planned_start_s), round(r.planned_duration_s), r.onset_unix_ms.toFixed(3), r.Y.toFixed(5), r.completed,
-      r.gaze ? "gaze" : "light", r.gaze?.u ?? "", r.gaze?.v ?? "", "", "", r.gaze ? round(r.gaze.az) : "", r.gaze ? round(r.gaze.el) : ""]));
+      r.phase ?? (r.gaze ? "gaze" : "light"), r.gaze?.u ?? "", r.gaze?.v ?? "", "", "", r.gaze ? round(r.gaze.az) : "", r.gaze ? round(r.gaze.el) : ""]));
   }
   return lines.join("");
 }

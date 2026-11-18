@@ -3,7 +3,7 @@
 // pass on the experimenter's commands; it reports back through `emit` with the messages the control page reads:
 // display, audio, started, status, score and done.
 
-import { APP_VERSION, VISUAL } from "./config.js";
+import { APP_VERSION, VISUAL, GAZE_CHECK } from "./config.js";
 import { createStage } from "./stage.js";
 import { stepLuminance, GAZE_RADIUS } from "./geometry.js";
 import { SessionRun } from "./session.js";
@@ -126,7 +126,10 @@ export class Presenter {
     this.emit({ type: "clock", clock: this.clock.summary() });
     const task = this.task = new TaskRun(this.plan, { audio: this.audio, sink, onScore: (score) => this.emit({ type: "score", score }) });
     this.run = new SessionRun(this.plan, {
-      show: (step) => this.stage.show(step, { headYaw: this.headYaw() }),
+      show: (step) => {
+        this.stage.show(step, { headYaw: this.headYaw() });
+        if (step.cue && this.calibration && !this.audio.cue({ hz: GAZE_CHECK.cueHz, length: GAZE_CHECK.cueLength })) this.calibration.cueMissed = true;
+      },
       luminance: (step) => stepLuminance(step, this.display()),
       sink, files: this.files,
       hooks: {

@@ -11,7 +11,7 @@
 // the participant ID (the presenter's "scrambled, seeded by participant"), so no two consecutive levels are neighbours in
 // brightness and each linked step stays with the one before it.
 
-import { CALIBRATION } from "./config.js";
+import { CALIBRATION, GAZE_CHECK } from "./config.js";
 import { rngFrom, shuffled } from "./rng.js";
 import { calibrationRunCsv } from "./formats.js";
 
@@ -104,9 +104,11 @@ export class CalibrationRun {
       time: (onset - first) / 1000, duration: (end - onset) / 1000, rgb: step.field, label: step.colour,
       index: step.step - 1, source_index: step.source >= 0 ? step.source + 1 : "", planned_start_s: step.start - info.firstStepStart,
       planned_duration_s: step.duration, onset_unix_ms: onset, Y: eckertY(step.field), completed: why === "next", gaze: step.gaze ?? null,
+      phase: step.gaze || step.cue ? "gaze" : "light",
     }));
     const gazeCount = info.gaze?.length ?? 0;
-    const complete = rows.length === info.steps.length + gazeCount && rows.every((r) => r.completed);
+    const cueCount = info.cueSeconds ? 1 : 0;
+    const complete = rows.length === info.steps.length + cueCount + gazeCount && rows.every((r) => r.completed);
     const last = list.at(-1);
     const meta = {
       tool: this.tool, run_id: this.runId, participant: this.participant, mode: this.mode,
@@ -114,11 +116,12 @@ export class CalibrationRun {
       sequence_name: sequenceName().name, order: "scrambled, seeded by participant", seed: this.participant,
       keep_neighbours_apart: true,
       started_iso: new Date(first).toISOString(), sequence_start_unix_ms: first.toFixed(3),
-      planned_total_s: calibrationLength(info.steps) + gazeCount * (info.gazeSeconds ?? 0),
+      planned_total_s: calibrationLength(info.steps) + (info.cueSeconds ?? 0) + gazeCount * (info.gazeSeconds ?? 0),
       actual_total_s: ((last.end - first) / 1000).toFixed(3),
       lead_in_s: info.leadIn, lead_in_rgb: Array(3).fill(info.leadGray).join(" "), waited_for_start_signal: false,
       fixation_point: "shown during the sequence (gray 128, 0.3 deg), unlike the standalone presenter",
       gaze_check: gazeCount > 0, gaze_step_s: gazeCount ? info.gazeSeconds : "",
+      gaze_cue: cueCount ? `${GAZE_CHECK.cueHz} Hz tone, ${GAZE_CHECK.cueLength} s, then ${info.cueSeconds} s of gray before the first point${this.cueMissed ? " (the tone could not be played)" : ""}` : "",
       gaze_grid: gazeCount ? `±${round(Math.max(...info.gaze.map((g) => Math.abs(g.az))))}° × ±${round(Math.max(...info.gaze.map((g) => Math.abs(g.el))))}° from straight ahead, fixed to the head` : "",
       ...this.env,
       note: "time = frame timestamp (s from the first step); display latency of about one frame is not included; a step cut by a pause lasts from its first onset to its last end",

@@ -34,7 +34,8 @@ export function preTimeline(participant, { calibration = true, maxDiameter = Inf
   if (calibration) {
     const played = calibrationSteps(participant, cc);
     const places = gc.on ? gazePlaces(maxDiameter, gc) : [];
-    const duration = cc.leadIn + calibrationLength(played) + places.length * gc.seconds;
+    const cue = places.length ? gc.cueSeconds : 0;
+    const duration = cc.leadIn + calibrationLength(played) + cue + places.length * gc.seconds;
     phase("Calibration", "calibration", duration);
     step(1, "calibration", cc.leadIn, gray(cc.leadGray), { colour: "Lead-in" });
     let at = t + cc.leadIn;
@@ -43,13 +44,19 @@ export function preTimeline(participant, { calibration = true, maxDiameter = Inf
         target: null, colour: st.label, scene: null, change: "step", source: st.source, linked: st.linked });
       at += st.seconds;
     });
+    if (cue) {
+      steps.push({ segment: 0, step: played.length + 2, type: "calibration", variant: null, start: at, duration: cue,
+        field: gray(cc.leadGray), target: null, colour: "Gaze check cue (tone)", scene: null, change: "gaze", source: -1, linked: false,
+        cue: true });
+      at += cue;
+    }
     places.forEach((gaze, k) => {
-      steps.push({ segment: 0, step: played.length + k + 2, type: "calibration", variant: null, start: at, duration: gc.seconds,
+      steps.push({ segment: 0, step: played.length + k + 2 + (cue ? 1 : 0), type: "calibration", variant: null, start: at, duration: gc.seconds,
         field: gray(cc.leadGray), target: null, colour: `Gaze target ${k + 1}`, scene: null, change: "gaze", source: -1, linked: false,
         gaze });
       at += gc.seconds;
     });
-    calibrationInfo = { steps: played, gaze: places, gazeSeconds: gc.seconds, leadIn: cc.leadIn, leadGray: cc.leadGray, start: t,
+    calibrationInfo = { steps: played, gaze: places, gazeSeconds: gc.seconds, cueSeconds: cue, leadIn: cc.leadIn, leadGray: cc.leadGray, start: t,
       duration, firstStepStart: t + cc.leadIn };
     t += duration;
   }
