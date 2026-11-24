@@ -11,19 +11,20 @@ import { calibrationSteps, calibrationLength } from "./calibration.js";
 import { nbackBlock } from "./nback.js";
 import { gray } from "./colour.js";
 
-/** The gaze check's places for a display whose height is `maxDiameter` (°; Infinity in the headset): `{ u, v, az, el }`
- *  (deg; right, up), the grid shrunk to `displayShare` of the display's height when it would not fit. */
-export function gazePlaces(maxDiameter = Infinity, gc = GAZE_CHECK) {
-  const k = Number.isFinite(maxDiameter) ? Math.min(1, (gc.displayShare * maxDiameter) / gc.elDeg) : 1;
-  return gc.points.map(([u, v]) => ({ u, v, az: u * gc.azDeg * k, el: -v * gc.elDeg * k }));
+/** The gaze check's places, as the calibration presenter places them: in the headset (`mode` "vr") `{ u, v, az, el }`, a
+ *  direction from the head (deg; right, up); on a monitor ("screen") `{ u, v, x, y }`, a fraction of the screen from its top
+ *  left, the grid's edges `screenShare` of the screen from its centre. */
+export function gazePlaces(mode = "vr", gc = GAZE_CHECK) {
+  if (mode === "screen") return gc.points.map(([u, v]) => ({ u, v, x: 0.5 + u * gc.screenShare, y: 0.5 + v * gc.screenShare }));
+  return gc.points.map(([u, v]) => ({ u, v, az: u * gc.azDeg, el: -v * gc.elDeg }));
 }
 
 /**
  * `{ phases, steps, calibration, duration }` for `participant`, times in s from the start of the recording.
  * `steps` are visual steps in the visual timeline's shape (segment 0, type "calibration"); the gaze check's steps are
- * calibration steps too, with a `gaze` place. `options`: `{ calibration, maxDiameter }`.
+ * calibration steps too, with a `gaze` place. `options`: `{ calibration, mode }` ("vr" or "screen").
  */
-export function preTimeline(participant, { calibration = true, maxDiameter = Infinity } = {}, cc = CALIBRATION, gc = GAZE_CHECK) {
+export function preTimeline(participant, { calibration = true, mode = "vr" } = {}, cc = CALIBRATION, gc = GAZE_CHECK) {
   const phases = [], steps = [];
   let t = 0, calibrationInfo = null;
   const phase = (label, kind, duration, extra = {}) => { phases.push({ label, kind, start: t, duration, ...extra }); };
@@ -33,7 +34,7 @@ export function preTimeline(participant, { calibration = true, maxDiameter = Inf
 
   if (calibration) {
     const played = calibrationSteps(participant, cc);
-    const places = gc.on ? gazePlaces(maxDiameter, gc) : [];
+    const places = gc.on ? gazePlaces(mode, gc) : [];
     const cue = places.length ? gc.cueSeconds : 0;
     const duration = cc.leadIn + calibrationLength(played) + cue + places.length * gc.seconds;
     phase("Calibration", "calibration", duration);

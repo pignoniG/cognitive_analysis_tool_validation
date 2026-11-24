@@ -8,10 +8,10 @@ import { nbackBlock } from "./nback.js";
 import { preTimeline } from "./prelude.js";
 
 /** The plan for `participant`, for a display whose largest whole target is `maxDiameter` (°). `options`:
- *  `{ calibration }` (on by default) and `{ set }`, the visual set (A or B). */
+ *  `{ calibration }` (on by default), `{ set }`, the visual set (A or B), and `{ mode }`, "vr" (default) or "screen". */
 export function makePlan(participant, maxDiameter = Infinity, options = {}) {
-  const opts = { calibration: options.calibration ?? true, set: options.set ?? VISUAL.defaultSet };
-  const pre = preTimeline(participant, { ...opts, maxDiameter });
+  const opts = { calibration: options.calibration ?? true, set: options.set ?? VISUAL.defaultSet, mode: options.mode ?? "vr" };
+  const pre = preTimeline(participant, { calibration: opts.calibration, mode: opts.mode });
   const off = pre.duration;
   const loadPhases = loadTimeline(participant);
   const visual = visualTimeline(participant, loadPhases, { maxDiameter, set: opts.set });

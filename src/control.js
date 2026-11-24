@@ -50,7 +50,7 @@ function build() {
   if (!c.participant) status.textContent = "Enter a participant ID.";
   else {
     try {
-      plan = makePlan(c.participant, maxDiameter, { calibration: c.calibration, set: c.set });
+      plan = makePlan(c.participant, maxDiameter, { calibration: c.calibration, set: c.set, mode });
       status.textContent = describePlan(plan);
       renderPreview(plan, { onStep: previewStep });
     } catch (e) {

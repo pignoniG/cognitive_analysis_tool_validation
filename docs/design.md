@@ -67,7 +67,8 @@ validation are recorded the same way. It covers under 0.1 deg².
 participant's attention, then 1 s of lead-in gray with no point lets the pupil's response to the sound pass (the light
 steps, which the fits use, are not touched by it); then on the lead-in gray the fixation point, 1.6° across with a white
 centre, moves through 9 places, 3 s each, the centre first; each place is a direction from the
-eye (±15° × ±12°, shrunk to 40 % of the display's height on a smaller monitor), fixed to the head in the headset. The
+eye: in the headset ±15° × ±12° from straight ahead, fixed to the head; on a monitor ±0.35 of the screen from its
+centre, as the calibration presenter places them. The
 run file logs each place (`phase` = `gaze`, `target_u`, `target_v`, `target_az_deg`, `target_el_deg`), so cwtool can
 check that the gaze lands on the point in the scene video and propose an offset (cwtool's open issue 61). Its rows are
 calibration steps of segment 0 in the visual log, labelled `Gaze check cue (tone)` (the tone and the second of gray, no place) and `Gaze target 1` … `9`.

@@ -108,7 +108,8 @@ export class CalibrationRun {
       fixation_point: "shown during the sequence (gray 128, 0.3 deg), unlike the standalone presenter",
       gaze_check: gazeCount > 0, gaze_step_s: gazeCount ? info.gazeSeconds : "",
       gaze_cue: cueCount ? `${GAZE_CHECK.cueHz} Hz tone, ${GAZE_CHECK.cueLength} s, then ${info.cueSeconds} s of gray before the first point${this.cueMissed ? " (the tone could not be played)" : ""}` : "",
-      gaze_grid: gazeCount ? `±${round(Math.max(...info.gaze.map((g) => Math.abs(g.az))))}° × ±${round(Math.max(...info.gaze.map((g) => Math.abs(g.el))))}° from straight ahead, fixed to the head` : "",
+      gaze_grid: !gazeCount ? "" : info.gaze[0].x !== undefined ? `±${GAZE_CHECK.screenShare} of the screen from its centre`
+        : `±${round(Math.max(...info.gaze.map((g) => Math.abs(g.az))))}° × ±${round(Math.max(...info.gaze.map((g) => Math.abs(g.el))))}° from the head's straight ahead, fixed to the head`,
       ...this.env,
       note: "time = frame timestamp (s from the first step); display latency of about one frame is not included; a step cut by a pause lasts from its first onset to its last end",
     };

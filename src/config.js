@@ -98,7 +98,9 @@ export const FIXATION = { diameter: 0.3, outline: 0.08, fill: [128, 128, 128], s
 export const GAZE_CHECK = {
   on: true,
   points: [[0, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]],   // u right, v down
-  seconds: 3, azDeg: 15, elDeg: 12, diameter: 1.6, centre: [255, 255, 255], displayShare: 0.4,
+  // in the headset the grid's edges are azDeg and elDeg from straight ahead, fixed to the head; on a monitor they are
+  // screenShare of the screen from its centre, as in the calibration presenter (its GAZE_SCREEN)
+  seconds: 3, azDeg: 15, elDeg: 12, screenShare: 0.35, diameter: 1.6, centre: [255, 255, 255],
   // Before the first place: a short tone to call the participant's attention, then cueSeconds of gray with no point, so the
   // pupil's response to the sound is over before the places (and the light steps, which the fits use, are not touched).
   cueSeconds: 1, cueHz: 880, cueLength: 0.2,

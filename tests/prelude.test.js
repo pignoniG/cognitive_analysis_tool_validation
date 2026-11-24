@@ -178,10 +178,11 @@ test("the practice run: its own log, scores and a feedback tone on every press",
   assert.ok(audio.feedbacks.every((hit) => hit === true));
 });
 
-test("the gaze check shrinks to fit a small monitor and can be left out", () => {
-  assert.deepEqual(gazePlaces(Infinity)[5], { u: 1, v: 1, az: 15, el: -12 });
-  const small = gazePlaces(20);                   // a display 20° high: the grid's edges at 8° up and down
-  assert.ok(Math.abs(Math.max(...small.map((p) => p.el)) - 8) < 1e-9 && Math.abs(Math.max(...small.map((p) => p.az)) - 10) < 1e-9);
-  const plan = makePlan("P01", Infinity, {});
+test("the gaze check is placed as the calibration presenter places it", () => {
+  assert.deepEqual(gazePlaces("vr")[5], { u: 1, v: 1, az: 15, el: -12 });      // headset: a direction from the head
+  assert.deepEqual(gazePlaces("screen")[5], { u: 1, v: 1, x: 0.85, y: 0.85 });  // monitor: ±0.35 of the screen, any size
+  assert.deepEqual(gazePlaces("screen")[0], { u: 0, v: 0, x: 0.5, y: 0.5 });
+  const plan = makePlan("P01", 20, { mode: "screen" });
   assert.equal(plan.pre.calibration.gaze.length, 9);
+  assert.ok(plan.pre.calibration.gaze.every((g) => g.az === undefined && g.x >= 0.15 && g.x <= 0.85));
 });

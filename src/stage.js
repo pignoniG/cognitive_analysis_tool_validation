@@ -57,8 +57,18 @@ export function createStage(THREE, renderer, { scenes = {}, flat = false } = {})
   outline.position.z = dot.position.z = -1;
   // The gaze check moves the fixation point to a direction (az, el) on the plane one unit ahead, larger and with a white centre.
   const placeFixation = (gaze) => {
-    const az = rad(gaze?.az ?? 0), el = rad(gaze?.el ?? 0), k = gaze ? GAZE_CHECK.diameter / FIXATION.diameter : 1;
-    for (const m of [outline, dot]) { m.position.set(Math.tan(az), Math.tan(el) / Math.cos(az), -1); m.scale.set(k, k, 1); }
+    const k = gaze ? GAZE_CHECK.diameter / FIXATION.diameter : 1;
+    let x, y;
+    if (gaze && gaze.x !== undefined) {         // monitor: a fraction of the screen, as the calibration presenter places it
+      const h = Math.tan(rad(camera.fov / 2));
+      x = (2 * gaze.x - 1) * h * camera.aspect;
+      y = (1 - 2 * gaze.y) * h;
+    } else {                                    // headset: a direction from the head
+      const az = rad(gaze?.az ?? 0), el = rad(gaze?.el ?? 0);
+      x = Math.tan(az);
+      y = Math.tan(el) / Math.cos(az);
+    }
+    for (const m of [outline, dot]) { m.position.set(x, y, -1); m.scale.set(k, k, 1); }
     setColour(dotMat, gaze ? GAZE_CHECK.centre : FIXATION.fill);
   };
 
@@ -130,6 +140,7 @@ export function createStage(THREE, renderer, { scenes = {}, flat = false } = {})
       camera.fov = vfov;
       camera.aspect = aspect;
       camera.updateProjectionMatrix();
+      if (current?.gaze) placeFixation(current.gaze);      // a screen place follows the canvas
     },
     dispose() {
       for (const t of textures.values()) t.dispose();
