@@ -63,7 +63,7 @@ it cannot run during a session.
    5-minute **calibration**, which opens, after 5 s of gray, with a short tone, a second of gray, then 27 s in which the
    point, larger and with a white centre, jumps to 9 places, 3 s each (tell the participant to follow it with the eyes
    and look at its centre; the tone needs the computer's sound on); then the participant only looks at the fixation
-   point while the field changes colour; then the session proper, which starts with its 1-minute baseline. Untick the box to leave the calibration out. Tell the
+   point while the field changes colour; then the session proper, which starts with its 90 s baseline. Untick the box to leave the calibration out. Tell the
    participant before starting that the first part is a colour sequence to watch, with nothing to do. Nothing but the
    stimulus is drawn in the stimulus window from then on.
 10. **Responses** go to the stimulus window, so it must keep the focus: Space, Enter, a presentation clicker (Page

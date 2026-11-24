@@ -41,7 +41,7 @@ test("a plan puts the calibration before the session, on one clock", () => {
   assert.equal(plan.phases[1].start, 314);
   let t = 0;
   for (const p of plan.phases) { assert.ok(Math.abs(p.start - t) < 1e-9, `${p.label} starts at ${p.start}, expected ${t}`); t += p.duration; }
-  assert.equal(t, 314 + 1180);                      // 24:54
+  assert.equal(t, 314 + 1210);                      // 25:24
   // the visual steps cover the recording without gaps or overlaps, and the real ones start after the calibration
   let s = 0;
   for (const st of plan.visual.steps) { assert.ok(Math.abs(st.start - s) < 0.06, `${st.type} step at ${st.start}, expected ${s}`); s = st.start + st.duration; }
@@ -66,7 +66,7 @@ test("a plan puts the calibration before the session, on one clock", () => {
 test("the calibration can be left out, and the visual set is the participant's", () => {
   const bare = makePlan("P01", Infinity, { calibration: false });
   assert.equal(bare.phases[0].kind, "baseline");
-  assert.equal(bare.phases.reduce((n, p) => n + p.duration, 0), 1180);
+  assert.equal(bare.phases.reduce((n, p) => n + p.duration, 0), 1210);
   assert.equal(bare.visual.steps[0].start, 0);
   const full = makePlan("P01");
   // the session itself is the same with and without the calibration: only shifted
@@ -134,7 +134,7 @@ test("a full recording: calibration, then the session; the calibration run file 
   const cal = new CalibrationRun(plan.pre.calibration, { participant: "P01", mode: "screen", runId: "t", tool: "test" }, { time_zone: "UTC" });
   const { run, task, sink } = simulate(plan, { onStepClosed: (st, a, b, why) => { cal.step(st, a, b, why); } });
   assert.equal(run.summary.status, "completed");
-  assert.ok(Math.abs(run.summary.session_s - 1494) < 0.05);
+  assert.ok(Math.abs(run.summary.session_s - 1524) < 0.05);
 
   const ev = sink.files.get("ev.csv").trim().split("\n").map((l) => l.split(","));
   assert.deepEqual(ev.slice(1, 4).map((r) => r[0]), ["Calibration", "Baseline", "Instruction"]);

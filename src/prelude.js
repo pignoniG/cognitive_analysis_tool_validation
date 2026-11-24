@@ -1,7 +1,7 @@
 // What comes before the load timeline in the same recording: the calibration (the presenter's default sequence,
 // so the pupil model can be fitted on the participant's own recording), opened by the gaze check. It is optional and counts
 // within the setup time, not the session's minutes. It comes first, with the participant fresh and nothing else to do; the
-// session's 1-minute baseline follows to let the pupil settle.
+// session's 90 s baseline follows to let the pupil settle.
 //
 // The n-back practice is not part of the recording: it is a separate part of the page (practice.js), done before the
 // headset goes on or the participant sits at the monitor. Its plan is built here.

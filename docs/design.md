@@ -45,7 +45,7 @@ adds nothing to the time in the headset.
 
 The calibration is played by the same page as the first phase of the recording, so one recording (and one event
 log) holds the calibration of the pupil model and the validation. It is optional, on by default, and it needs to be
-there: the pupil adapts to the light during its long steps, and the session's 1-minute baseline follows it.
+there: the pupil adapts to the light during its long steps, and the session's 90 s baseline follows it.
 
 **Calibration** (about 5 min): cwtool's *time-course calibration*, the calibration presenter's default from November
 2026, ported exactly (`cwtool.calibration.TIME_COURSE`): 30 full-field steps of 281 s, after a 5 s gray lead-in and the gaze check. Eight
@@ -80,14 +80,14 @@ step; the session's baseline then follows the last light step.
 
 | Phase | Length | Load |
 |---|---|---|
-| Baseline | 1 min | rest, looking at the fixation point |
+| Baseline | 90 s | rest, looking at the fixation point: about 30 s for the pupil to recover from the calibration's last light step (bright in some orders; dilation time constants up to about 10 s), then 60 s of reference |
 | Instruction | 10 s | spoken instruction for the next block |
 | Block 1 to 3 | 2.5 min each | 1-, 2- and 3-back, in a seeded order |
 | Rest | 20 s | between blocks, before the next instruction |
 | Block 4 to 6 | 2.5 min each | the three levels again, in another seeded order |
 | Final rest | 1 min | rest |
 
-In total that is 1 + 6 × (10 s + 2.5 min) + 5 × 20 s + 1 = 19.7 min, and with the 5 min 14 s calibration (its gaze check included) 24.9 min in
+In total that is 1.5 + 6 × (10 s + 2.5 min) + 5 × 20 s + 1 = 20.2 min, and with the 5 min 14 s calibration (its gaze check included) 25.4 min in
 the headset. There is no 0-back: the rests are the low-load reference, and the lowest task level is 1-back. Each load
 level gets 5 minutes over its two blocks: enough for time-domain HRV per level, and ultra-short measures (RMSSD and
 heart rate, 1–2.5 min) per block.

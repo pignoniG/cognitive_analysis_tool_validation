@@ -3,7 +3,7 @@
 export const APP_VERSION = "0.1.0";
 
 export const SESSION = {
-  baseline: 60,         // rest before the first instruction, after the calibration
+  baseline: 90,         // rest before the first instruction: about 30 s for the pupil to recover from the calibration's last step, then 60 s of reference
   instruction: 10,      // spoken instruction before each block
   block: 150,           // one n-back block
   rest: 20,             // between a block and the next instruction
