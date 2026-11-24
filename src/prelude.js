@@ -1,7 +1,7 @@
 // What comes before the load timeline in the same recording: the calibration (the presenter's default sequence,
-// so the pupil model can be fitted on the participant's own recording). It is optional and counts within the setup
-// time, not the session's minutes. It comes first, with the participant fresh and nothing else to do; the session's
-// 2-minute baseline follows to let the pupil settle.
+// so the pupil model can be fitted on the participant's own recording), opened by the gaze check. It is optional and counts
+// within the setup time, not the session's minutes. It comes first, with the participant fresh and nothing else to do; the
+// session's 1-minute baseline follows to let the pupil settle.
 //
 // The n-back practice is not part of the recording: it is a separate part of the page (practice.js), done before the
 // headset goes on or the participant sits at the monitor. Its plan is built here.
@@ -39,23 +39,25 @@ export function preTimeline(participant, { calibration = true, mode = "vr" } = {
     const duration = cc.leadIn + calibrationLength(played) + cue + places.length * gc.seconds;
     phase("Calibration", "calibration", duration);
     step(1, "calibration", cc.leadIn, gray(cc.leadGray), { colour: "Lead-in" });
-    let at = t + cc.leadIn;
-    played.forEach((st, k) => {
-      steps.push({ segment: 0, step: k + 2, type: "calibration", variant: null, start: at, duration: st.seconds, field: st.rgb,
-        target: null, colour: st.label, scene: null, change: "step", source: st.source, linked: st.linked });
-      at += st.seconds;
-    });
+    let at = t + cc.leadIn, n = 2;
+    // the gaze check opens the calibration, on the lead-in gray: the tone, a second with no point, the 9 places; the light
+    // steps follow, so the pupil's response to the tone is over long before them
     if (cue) {
-      steps.push({ segment: 0, step: played.length + 2, type: "calibration", variant: null, start: at, duration: cue,
+      steps.push({ segment: 0, step: n++, type: "calibration", variant: null, start: at, duration: cue,
         field: gray(cc.leadGray), target: null, colour: "Gaze check cue (tone)", scene: null, change: "gaze", source: -1, linked: false,
         cue: true });
       at += cue;
     }
     places.forEach((gaze, k) => {
-      steps.push({ segment: 0, step: played.length + k + 2 + (cue ? 1 : 0), type: "calibration", variant: null, start: at, duration: gc.seconds,
+      steps.push({ segment: 0, step: n++, type: "calibration", variant: null, start: at, duration: gc.seconds,
         field: gray(cc.leadGray), target: null, colour: `Gaze target ${k + 1}`, scene: null, change: "gaze", source: -1, linked: false,
         gaze });
       at += gc.seconds;
+    });
+    played.forEach((st) => {
+      steps.push({ segment: 0, step: n++, type: "calibration", variant: null, start: at, duration: st.seconds, field: st.rgb,
+        target: null, colour: st.label, scene: null, change: "step", source: st.source, linked: st.linked });
+      at += st.seconds;
     });
     calibrationInfo = { steps: played, gaze: places, gazeSeconds: gc.seconds, cueSeconds: cue, leadIn: cc.leadIn, leadGray: cc.leadGray, start: t,
       duration, firstStepStart: t + cc.leadIn };

@@ -45,10 +45,10 @@ adds nothing to the time in the headset.
 
 The calibration is played by the same page as the first phase of the recording, so one recording (and one event
 log) holds the calibration of the pupil model and the validation. It is optional, on by default, and it needs to be
-there: the pupil adapts to the light during its long steps, and the session's 2-minute baseline follows it.
+there: the pupil adapts to the light during its long steps, and the session's 1-minute baseline follows it.
 
 **Calibration** (about 5 min): cwtool's *time-course calibration*, the calibration presenter's default from November
-2026, ported exactly (`cwtool.calibration.TIME_COURSE`): 30 full-field steps of 281 s, after a 5 s gray lead-in. Eight
+2026, ported exactly (`cwtool.calibration.TIME_COURSE`): 30 full-field steps of 281 s, after a 5 s gray lead-in and the gaze check. Eight
 grays from 12 to 255, about 2.3 times apart in luminance and with no black (in the dark the pupil exceeded what the Varjo
 reports); dimming after moderate light (Gray 128 → 24, Gray 96 → 12) and after bright light (Gray 255 → 24, Blue 255 → 12),
 which separate the fast and the slow part of the pupil's dilation; red, green and blue at 128 and 255, each after a gray of
@@ -63,7 +63,7 @@ comes first, with the participant fresh and nothing else to do. *Departure from 
 fixation point is shown (it is in every condition of this tool), so gaze is steady and the calibration and the
 validation are recorded the same way. It covers under 0.1 deg².
 
-**Gaze check** (28 s, closing the calibration, as in the calibration presenter): a short tone (880 Hz, 0.2 s) calls the
+**Gaze check** (28 s, opening the calibration right after the lead-in, as in the calibration presenter): a short tone (880 Hz, 0.2 s) calls the
 participant's attention, then 1 s of lead-in gray with no point lets the pupil's response to the sound pass (the light
 steps, which the fits use, are not touched by it); then on the lead-in gray the fixation point, 1.6° across with a white
 centre, moves through 9 places, 3 s each, the centre first; each place is a direction from the
@@ -72,19 +72,22 @@ centre, as the calibration presenter places them. The
 run file logs each place (`phase` = `gaze`, `target_u`, `target_v`, `target_az_deg`, `target_el_deg`), so cwtool can
 check that the gaze lands on the point in the scene video and propose an offset (cwtool's open issue 61). Its rows are
 calibration steps of segment 0 in the visual log, labelled `Gaze check cue (tone)` (the tone and the second of gray, no place) and `Gaze target 1` … `9`.
+It comes first (from November 2026; it closed the calibration before) so that it is done while the participant is
+fresh and still there in a calibration cut short, and its 28 s on the lead-in gray adapt the pupil before the first light
+step; the session's baseline then follows the last light step.
 
-### Load timeline (about 21 min)
+### Load timeline (about 20 min)
 
 | Phase | Length | Load |
 |---|---|---|
-| Baseline | 2 min | rest, looking at the fixation point |
+| Baseline | 1 min | rest, looking at the fixation point |
 | Instruction | 10 s | spoken instruction for the next block |
 | Block 1 to 3 | 2.5 min each | 1-, 2- and 3-back, in a seeded order |
 | Rest | 20 s | between blocks, before the next instruction |
 | Block 4 to 6 | 2.5 min each | the three levels again, in another seeded order |
 | Final rest | 1 min | rest |
 
-In total that is 2 + 6 × (10 s + 2.5 min) + 5 × 20 s + 1 = 20.7 min, and with the 5 min 4 s calibration (its gaze check included) 25.7 min in
+In total that is 1 + 6 × (10 s + 2.5 min) + 5 × 20 s + 1 = 19.7 min, and with the 5 min 14 s calibration (its gaze check included) 24.9 min in
 the headset. There is no 0-back: the rests are the low-load reference, and the lowest task level is 1-back. Each load
 level gets 5 minutes over its two blocks: enough for time-domain HRV per level, and ultra-short measures (RMSSD and
 heart rate, 1–2.5 min) per block.
@@ -369,7 +372,7 @@ Each has the default the code would use if not decided otherwise.
 4. **Equal-luminance sets:** both the dim and the bright set, or only one? *Default: both, alternating.*
 5. **Segment and step lengths:** segments of 24–36 s and steps of 5–10 s. Longer steps reach steady state (dilation
    time constants up to about 10 s) but give fewer changes per session. *Default: as above.*
-6. **Block length:** 2.5 min, with each level twice, fits 21 minutes. *Default: 2.5 min, three levels.*
+6. **Block length:** 2.5 min, with each level twice, fits 20 minutes. *Default: 2.5 min, three levels.*
 7. **A second event track in cwtool**, so `visual_log.csv` can be shaded next to the load phases. That is a cwtool
    change, to be logged in its open issues. *Default: not needed for the presenter; the visual log is already in the
    event_log columns.*

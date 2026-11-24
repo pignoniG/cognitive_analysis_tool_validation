@@ -3,7 +3,7 @@
 export const APP_VERSION = "0.1.0";
 
 export const SESSION = {
-  baseline: 120,        // rest before the first instruction
+  baseline: 60,         // rest before the first instruction, after the calibration
   instruction: 10,      // spoken instruction before each block
   block: 150,           // one n-back block
   rest: 20,             // between a block and the next instruction
@@ -91,7 +91,7 @@ export const VISUAL = {
 };
 
 export const FIXATION = { diameter: 0.3, outline: 0.08, fill: [128, 128, 128], stroke: [0, 0, 0] };
-// The gaze check at the end of the calibration (as the calibration presenter's): the fixation point, larger and with a
+// The gaze check at the start of the calibration, right after the lead-in (as the calibration presenter's): the fixation point, larger and with a
 // white centre, through 9 places on the lead-in gray, the centre first; a place is a direction from the eye, at most
 // azDeg × elDeg at the grid's edges (less on a monitor too small for it). The run file logs each place, so cwtool can
 // check that the gaze lands on it in the video and propose an offset.
@@ -102,6 +102,6 @@ export const GAZE_CHECK = {
   // screenShare of the screen from its centre, as in the calibration presenter (its GAZE_SCREEN)
   seconds: 3, azDeg: 15, elDeg: 12, screenShare: 0.35, diameter: 1.6, centre: [255, 255, 255],
   // Before the first place: a short tone to call the participant's attention, then cueSeconds of gray with no point, so the
-  // pupil's response to the sound is over before the places (and the light steps, which the fits use, are not touched).
+  // pupil's response to the sound is over before the places (and long before the light steps, which the fits use).
   cueSeconds: 1, cueHz: 880, cueLength: 0.2,
 };

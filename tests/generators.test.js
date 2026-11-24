@@ -29,14 +29,14 @@ test("equal-luminance sets match the design table", () => {
     for (const rgb of Object.values(set.colours)) assert.ok(Math.abs(nominalY(rgb) / set.Y - 1) < 0.02, String(rgb));
 });
 
-test("load timeline: 20.7 min, two rounds of the three levels (1- to 3-back)", () => {
+test("load timeline: 19.7 min, two rounds of the three levels (1- to 3-back)", () => {
   for (const seed of SEEDS) {
     const rounds = loadOrder(seed);
     assert.equal(rounds.length, 2);
     for (const r of rounds) assert.deepEqual([...r].sort(), [1, 2, 3]);
     assert.notEqual(rounds[1][0], rounds[0][2], seed);
     const phases = loadTimeline(seed);
-    assert.equal(totalDuration(phases), 1240);
+    assert.equal(totalDuration(phases), 1180);
     const blocks = phases.filter((p) => p.kind === "block");
     assert.equal(blocks.length, 6);
     assert.deepEqual(blocks.map((b) => b.level), rounds.flat());

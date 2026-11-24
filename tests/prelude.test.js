@@ -34,21 +34,25 @@ test("the calibration is cwtool's time-course calibration, in the same order for
 
 test("a plan puts the calibration before the session, on one clock", () => {
   const plan = makePlan("P01");
-  const gaze = GAZE_CHECK.cueSeconds + GAZE_CHECK.points.length * GAZE_CHECK.seconds;   // the gaze check closes the calibration: 1 + 27 s
+  const gaze = GAZE_CHECK.cueSeconds + GAZE_CHECK.points.length * GAZE_CHECK.seconds;   // the gaze check opens the calibration: 1 + 27 s
   assert.equal(plan.pre.duration, CALIBRATION.leadIn + 281 + gaze);
   assert.equal(plan.phases[0].kind, "calibration");
   assert.equal(plan.phases[1].kind, "baseline");
   assert.equal(plan.phases[1].start, 314);
   let t = 0;
   for (const p of plan.phases) { assert.ok(Math.abs(p.start - t) < 1e-9, `${p.label} starts at ${p.start}, expected ${t}`); t += p.duration; }
-  assert.equal(t, 314 + 1240);                      // 25:54
+  assert.equal(t, 314 + 1180);                      // 24:54
   // the visual steps cover the recording without gaps or overlaps, and the real ones start after the calibration
   let s = 0;
   for (const st of plan.visual.steps) { assert.ok(Math.abs(st.start - s) < 0.06, `${st.type} step at ${st.start}, expected ${s}`); s = st.start + st.duration; }
   assert.ok(Math.abs(s - t) < 0.06);
   assert.ok(plan.visual.segments.every((g) => g.start >= plan.pre.duration));
-  assert.equal(plan.visual.pre.filter((x) => x.type === "calibration").length, 41);   // the lead-in, 30 steps, the cue, 9 gaze targets
+  assert.equal(plan.visual.pre.filter((x) => x.type === "calibration").length, 41);   // the lead-in, the cue, 9 gaze targets, 30 steps
+  assert.ok(plan.visual.pre[1].cue && plan.visual.pre[1].start === CALIBRATION.leadIn);  // the gaze check right after the lead-in
   const targets = plan.visual.pre.filter((x) => x.gaze);
+  const firstLight = plan.visual.pre.find((x) => x.change === "step");
+  assert.equal(firstLight.start, CALIBRATION.leadIn + gaze);                  // the light steps after it
+  assert.ok(targets.every((x) => x.start < firstLight.start));
   assert.deepEqual(targets.map((x) => [x.gaze.u, x.gaze.v]), GAZE_CHECK.points);
   assert.ok(targets.every((x) => x.field.every((c) => c === CALIBRATION.leadGray) && x.duration === GAZE_CHECK.seconds));
   assert.deepEqual([targets[3].gaze.az, targets[3].gaze.el], [15, 12]);   // up and to the right
@@ -62,7 +66,7 @@ test("a plan puts the calibration before the session, on one clock", () => {
 test("the calibration can be left out, and the visual set is the participant's", () => {
   const bare = makePlan("P01", Infinity, { calibration: false });
   assert.equal(bare.phases[0].kind, "baseline");
-  assert.equal(bare.phases.reduce((n, p) => n + p.duration, 0), 1240);
+  assert.equal(bare.phases.reduce((n, p) => n + p.duration, 0), 1180);
   assert.equal(bare.visual.steps[0].start, 0);
   const full = makePlan("P01");
   // the session itself is the same with and without the calibration: only shifted
@@ -130,7 +134,7 @@ test("a full recording: calibration, then the session; the calibration run file 
   const cal = new CalibrationRun(plan.pre.calibration, { participant: "P01", mode: "screen", runId: "t", tool: "test" }, { time_zone: "UTC" });
   const { run, task, sink } = simulate(plan, { onStepClosed: (st, a, b, why) => { cal.step(st, a, b, why); } });
   assert.equal(run.summary.status, "completed");
-  assert.ok(Math.abs(run.summary.session_s - 1554) < 0.05);
+  assert.ok(Math.abs(run.summary.session_s - 1494) < 0.05);
 
   const ev = sink.files.get("ev.csv").trim().split("\n").map((l) => l.split(","));
   assert.deepEqual(ev.slice(1, 4).map((r) => r[0]), ["Calibration", "Baseline", "Instruction"]);
@@ -143,11 +147,13 @@ test("a full recording: calibration, then the session; the calibration run file 
   assert.ok(meta.some((l) => l.startsWith("# sequence_start_unix_ms: ")));
   const table = lines.filter((l) => !l.startsWith("# ")).map((l) => l.split(","));
   assert.deepEqual(table[0], CALIBRATION_RUN_COLUMNS);
-  assert.equal(table.length - 1, 40);                                 // 30 light steps, the cue, then 9 gaze targets
+  assert.equal(table.length - 1, 40);                                 // the cue, 9 gaze targets, then 30 light steps
   assert.equal(table[1][0], "0");
-  assert.equal(table[1][6], "1");                                     // index
-  assert.equal(table[1][7], "27");                                    // source_index (P01 starts with preset step 27)
-  assert.ok(Math.abs(Number(table[1][9]) - 12) < 1e-9);              // planned_duration_s (Gray 24)
+  assert.equal(table[1][5], "Gaze check cue (tone)");                 // the gaze check first
+  assert.ok(table.slice(1, 11).every((r) => r[13] === "gaze") && table.slice(11).every((r) => r[13] === "light"));
+  assert.equal(table[11][6], "11");                                   // index
+  assert.equal(table[11][7], "27");                                   // source_index (P01 starts with preset step 27)
+  assert.ok(Math.abs(Number(table[11][9]) - 12) < 1e-9);             // planned_duration_s (Gray 24)
   assert.ok(table.slice(1).every((r) => r[12] === "true"));
   assert.ok(meta.includes("# sequence_name: time-course calibration (presenter default)"));
   const light = table.slice(1).filter((r) => r[13] === "light"), gazeRows = table.slice(1).filter((r) => r[13] === "gaze");
