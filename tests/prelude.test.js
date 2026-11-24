@@ -11,8 +11,6 @@ import { Sink } from "../src/sink.js";
 import { TaskRun, audioCues } from "../src/task.js";
 import { CALIBRATION_RUN_COLUMNS, NBACK_LOG_HEADER } from "../src/formats.js";
 
-const FULL = { ...CALIBRATION, design: "full" };
-
 test("the calibration is cwtool's time-course calibration, in the same order for the same seed", () => {
   // cwtool.calibration.TIME_COURSE (the preset order) and cwtool.calibration.scrambled(TIME_COURSE, "P01"), from cwtool
   const designed = designedSteps();
@@ -32,26 +30,6 @@ test("the calibration is cwtool's time-course calibration, in the same order for
   // every linked step comes right after its context
   p01.forEach((s, i) => { if (s.linked) assert.equal(p01[i - 1].source + 1, s.source); });
   assert.equal(sequenceName().cwtool, "TIME_COURSE");
-});
-
-test("the full calibration of the first runs is still there, in cwtool's order", () => {
-  // cwtool.calibration.DEFAULT (the preset order) and cwtool.calibration.scrambled(DEFAULT, "P01"), from cwtool
-  const designed = designedSteps(FULL);
-  assert.equal(designed.length, 34);
-  assert.equal(calibrationLength(designed), 291);
-  const preset = scrambleIndices(designed, FULL.presetSeed).map((i) => designed[i].label);
-  assert.deepEqual(preset.slice(0, 6), ["Gray 255", "Gray 219", "Black", "Blue 255", "Black", "Green 191"]);
-  const p01 = calibrationSteps("P01", FULL);
-  assert.deepEqual(p01.map((s) => s.label), [
-    "Black", "Green 64", "Gray 73", "Black", "Blue 64", "Black", "Red 255", "Gray 219", "Gray 146", "Gray 182 (repeat)",
-    "Gray 73 (repeat)", "Gray 36", "Black", "Green 191", "Gray 255", "Black", "Red 64", "Black", "Red 128", "Gray 109", "Black",
-    "Blue 191", "Black", "Blue 128", "Black", "Red 191", "Black", "Green 128", "Black", "Green 255", "Gray 0", "Gray 182", "Black", "Blue 255"]);
-  assert.deepEqual(p01.slice(0, 3).map((s) => s.source + 1), [32, 33, 28]);
-  // every colour comes right after its black step
-  p01.forEach((s, i) => { if (s.linked) { assert.equal(p01[i - 1].label, "Black"); assert.equal(p01[i - 1].source + 1, s.source); } });
-  assert.notDeepEqual(calibrationSteps("P02", FULL).map((s) => s.label), p01.map((s) => s.label));
-  assert.deepEqual(calibrationSteps("P01", FULL), p01);
-  assert.equal(sequenceName(FULL).cwtool, "DEFAULT");
 });
 
 test("a plan puts the calibration before the session, on one clock", () => {

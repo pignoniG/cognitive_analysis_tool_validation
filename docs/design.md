@@ -56,8 +56,8 @@ the same luminance; two grays repeated; irregular lengths of 6 to 20 s. Each pro
 step. The order is the presenter's "scrambled, seeded by participant" (the preset order scrambled again with the
 participant ID, no two consecutive levels next to each other in brightness), so the same ID gives the same order
 here, in the presenter and in `cwtool.calibration.scrambled(TIME_COURSE, id)`. The first run (P01, 10 November 2026) used
-the *full calibration* (34 steps, 291 s, with black steps; `CALIBRATION.design = "full"` regenerates it); why it was
-replaced is in cwtool's open issues 52 to 57. The only spoken cue is the rest phrase at
+the *full calibration* (34 steps, 291 s, with black steps), recorded in that run's file; why it was replaced is in
+cwtool's open issues 52 to 57. The time-course calibration is the only sequence. The only spoken cue is the rest phrase at
 the start ("keep your gaze on the point"). It is saved as `calibration_run_*.csv` in the presenter's run format. It
 comes first, with the participant fresh and nothing else to do. *Departure from the standalone presenter:* the
 fixation point is shown (it is in every condition of this tool), so gaze is steady and the calibration and the

@@ -15,14 +15,13 @@ export const SESSION = {
 // The calibration is the calibration presenter's default sequence (docs/calibration-tool of cwtool), played at the start
 // of the same recording, so one recording holds the calibration and the validation. From November 2026 it is the
 // time-course calibration (cwtool.calibration.TIME_COURSE): no black, dimming after moderate and after bright light, colours
-// after a gray of the same luminance (cwtool open issue 57). The full calibration (cwtool.calibration.DEFAULT) played before
-// it, in the first run, and is kept here to regenerate such a run.
+// after a gray of the same luminance (cwtool open issue 57). It is the only calibration sequence; the full calibration of
+// the first run (P01) is in that run's file.
 export const CALIBRATION = {
   leadIn: 5,            // s of neutral gray before the first step, as the presenter's default
   leadGray: 128,
   presetSeed: "calibration",   // the seed of the preset order (cwtool.calibration.PRESET_SEED)
-  design: "time-course",       // or "full"
-  // time-course: [label, [r, g, b], seconds, linked] in the design's order (cwtool.calibration.TIME_COURSE_ITEMS); a linked
+  // [label, [r, g, b], seconds, linked] in the design's order (cwtool.calibration.TIME_COURSE_ITEMS); a linked
   // step moves with the one before it when the order is scrambled, so each probe keeps its context
   items: [
     ["Gray 12", [12, 12, 12], 14, false], ["Gray 24", [24, 24, 24], 12, false], ["Gray 40", [40, 40, 40], 10, false],
@@ -40,11 +39,6 @@ export const CALIBRATION = {
     ["Gray 76 (as Blue 255)", [76, 76, 76], 8, false], ["Blue 255", [0, 0, 255], 9, true],
     ["Gray 64 (repeat)", [64, 64, 64], 9, false], ["Gray 196 (repeat)", [196, 196, 196], 7, false],
   ],
-  // full calibration (until November 2026)
-  grayLengths: { 0: 20, 36: 15, 73: 10, 109: 8, 146: 6, 182: 6, 219: 6, 255: 12 },   // gray level: seconds
-  colourLevels: [64, 128, 191, 255],
-  colourSeconds: 8,     // each colour, and the black step before it
-  repeats: [73, 182],   // grays shown again, 8 s each
 };
 
 // The n-back practice, a separate part of the page done before the recording (outside the headset): each level
